@@ -24,6 +24,14 @@ public struct Playlist: SoundCloudIdentifiable {
     public var isPublic: Bool
     public var isAlbum: Bool
     
+    public var trackIDs: [Int]? {
+        switch tracks {
+        case .full(let tracks): return tracks.map { $0.id }
+        case .id(let ids): return ids
+        case .none: return nil
+        }
+    }
+    
 }
 
 extension Playlist: Decodable {
