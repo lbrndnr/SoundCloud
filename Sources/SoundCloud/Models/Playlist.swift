@@ -49,15 +49,18 @@ extension Playlist: Decodable {
         isPublic = try container.decode(Bool.self, forKey: .isPublic)
         isAlbum = try container.decode(Bool.self, forKey: .isAlbum)
         
-        if let tracks = try container.decodeIfPresent([Track].self, forKey: .tracks) {
+        do {
+            let tracks = try container.decode([Track].self, forKey: .tracks)
             self.tracks = .full(tracks)
         }
-        else if let tracks = try container.decodeIfPresent([Any].self, forKey: .tracks) as? [[String : Any]] {
-            let ids = tracks.map { $0["id"] as! Int }
-            self.tracks = .id(ids)
-        }
-        else {
-            self.tracks = .id([])
+        catch {
+            if let tracks = try container.decode([Any].self, forKey: .tracks) as? [[String : Any]] {
+                let ids = tracks.map { $0["id"] as! Int }
+                self.tracks = .id(ids)
+            }
+            else {
+                self.tracks = .id([])
+            }
         }
     }
     
