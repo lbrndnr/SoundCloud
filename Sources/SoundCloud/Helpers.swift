@@ -9,18 +9,6 @@
 import Foundation
 import Combine
 
-private var durationFormatter: DateComponentsFormatter = {
-    let formatter = DateComponentsFormatter()
-    formatter.unitsStyle = .positional
-    formatter.allowedUnits = [.hour, .minute, .second]
-    
-    return formatter
-}()
-
-func format(duration: TimeInterval) -> String {
-    return durationFormatter.string(from: duration) ?? "0"
-}
-
 struct JSONCodingKeys: CodingKey {
     var stringValue: String
 

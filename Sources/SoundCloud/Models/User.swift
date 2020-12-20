@@ -21,6 +21,13 @@ public struct User: SoundCloudIdentifiable {
     
     public var playlists: [Playlist]?
     
+    public init(id: Int, name: String, username: String, avatarURL: URL) {
+        self.id = id
+        self.name = name
+        self.username = username
+        self.avatarURL = avatarURL
+    }
+    
 }
 
 extension User: Encodable, Decodable {
