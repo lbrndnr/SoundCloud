@@ -20,7 +20,7 @@ public struct Playlist: SoundCloudIdentifiable {
     public var description: String?
     public var artworkURL: URL?
     public var permalinkURL: URL
-    public var tracks: Tracks
+    public var tracks: Tracks?
     public var isPublic: Bool
     public var isAlbum: Bool
     
@@ -49,17 +49,16 @@ extension Playlist: Decodable {
         isPublic = try container.decode(Bool.self, forKey: .isPublic)
         isAlbum = try container.decode(Bool.self, forKey: .isAlbum)
         
-        do {
-            let tracks = try container.decode([Track].self, forKey: .tracks)
-            self.tracks = .full(tracks)
-        }
-        catch {
-            if let tracks = try container.decode([Any].self, forKey: .tracks) as? [[String : Any]] {
-                let ids = tracks.map { $0["id"] as! Int }
-                self.tracks = .id(ids)
+        if container.contains(.tracks) {
+            do {
+                let tracks = try container.decode([Track].self, forKey: .tracks)
+                self.tracks = .full(tracks)
             }
-            else {
-                self.tracks = .id([])
+            catch {
+                if let tracks = try container.decode([Any].self, forKey: .tracks) as? [[String : Any]] {
+                    let ids = tracks.map { $0["id"] as! Int }
+                    self.tracks = .id(ids)
+                }
             }
         }
     }
