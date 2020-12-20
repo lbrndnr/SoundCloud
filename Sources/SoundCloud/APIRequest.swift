@@ -8,9 +8,9 @@
 
 import Foundation
 
-struct APIRequest<T: Decodable> {
+public struct APIRequest<T: Decodable> {
     
-    enum API {
+    public enum API {
         case me
         case albumsAndPlaylists
         case stream
@@ -29,53 +29,53 @@ struct APIRequest<T: Decodable> {
         case addToPlaylist(Int, [Int])
     }
     
-    var url: API
+    public var url: API
     
-    static func me() -> APIRequest<User> {
+    public static func me() -> APIRequest<User> {
         return APIRequest<User>(url: .me)
     }
     
-    static func albumsAndPlaylists() -> APIRequest<Slice<Like<Playlist>>> {
+    public static func albumsAndPlaylists() -> APIRequest<Slice<Like<Playlist>>> {
         return APIRequest<Slice<Like<Playlist>>>(url: .albumsAndPlaylists)
     }
     
-    static func stream() -> APIRequest<Slice<Post>> {
+    public static func stream() -> APIRequest<Slice<Post>> {
         return APIRequest<Slice<Post>>(url: .stream)
     }
     
-    static func whoToFollow() -> APIRequest<Slice<Recommendation>> {
+    public static func whoToFollow() -> APIRequest<Slice<Recommendation>> {
         return APIRequest<Slice<Recommendation>>(url: .whoToFollow)
     }
     
-    static func history() -> APIRequest<Slice<HistoryItem>> {
+    public static func history() -> APIRequest<Slice<HistoryItem>> {
         return APIRequest<Slice<HistoryItem>>(url: .history)
     }
     
-    static func tracks(_ ids: [Int]) -> APIRequest<[Track]> {
+    public static func tracks(_ ids: [Int]) -> APIRequest<[Track]> {
         return APIRequest<[Track]>(url: .tracks(ids))
     }
     
-    static func trackLikes(of user: User) -> APIRequest<Slice<Like<Track>>> {
+    public static func trackLikes(of user: User) -> APIRequest<Slice<Like<Track>>> {
         return APIRequest<Slice<Like<Track>>>(url: .trackLikes(user.id))
     }
     
-    static func like(_ track: Track) -> APIRequest<String> {
+    public static func like(_ track: Track) -> APIRequest<String> {
         return APIRequest<String>(url: .likeTrack(track.id))
     }
     
-    static func unlike(_ track: Track) -> APIRequest<String> {
+    public static func unlike(_ track: Track) -> APIRequest<String> {
         return APIRequest<String>(url: .unlikeTrack(track.id))
     }
     
-    static func playlist(_ id: Int) -> APIRequest<Playlist> {
+    public static func playlist(_ id: Int) -> APIRequest<Playlist> {
         return APIRequest<Playlist>(url: .playlist(id))
     }
     
-    static func add(to playlist: Playlist, trackIDs: [Int]) -> APIRequest<Playlist> {
+    public static func add(to playlist: Playlist, trackIDs: [Int]) -> APIRequest<Playlist> {
         return APIRequest<Playlist>(url: .addToPlaylist(playlist.id, trackIDs))
     }
     
-    var path: String {
+    public var path: String {
         switch url {
         case .me: return "me"
         case .albumsAndPlaylists: return "me/library/albums_playlists_and_system_playlists"
@@ -93,14 +93,14 @@ struct APIRequest<T: Decodable> {
         }
     }
     
-    var queryParameters: [String: String]? {
+    public var queryParameters: [String: String]? {
         switch url {
         case .tracks(let ids): return ["ids": ids.map { String($0) }.joined(separator: ",")]
         default: return nil
         }
     }
     
-    var httpMethod: String {
+    public var httpMethod: String {
         switch url {
         case .likeTrack(_): return "PUT"
         case .unlikeTrack(_): return "DELETE"
@@ -109,7 +109,7 @@ struct APIRequest<T: Decodable> {
         }
     }
     
-    var body: Data? {
+    public var body: Data? {
         switch url {
         case .addToPlaylist(_, let trackIDs):
             let tracks = ["tracks": trackIDs]
@@ -124,7 +124,7 @@ struct APIRequest<T: Decodable> {
         }
     }
     
-    var needsUserID: Bool {
+    public var needsUserID: Bool {
         switch url {
         case .likeTrack(_): fallthrough
         case .unlikeTrack(_): return true

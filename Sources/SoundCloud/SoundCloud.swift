@@ -13,12 +13,12 @@ private let clientID = "buRV7bRM79DWp3a09HG1kQEHiBccIBeG"
 
 struct AuthenticationError: Error {}
 
-class SoundCloud {
+public class SoundCloud {
     
-    static var shared = SoundCloud()
+    public static var shared = SoundCloud()
     
-    @Published var user: User?
-    var accessToken: String? {
+    @Published public var user: User?
+    public var accessToken: String? {
         didSet {
             get(.me())
                 .receive(on: RunLoop.main)
@@ -43,7 +43,7 @@ class SoundCloud {
     
     // MARK: - Authentication
     
-    static func login(username: String, password: String) -> AnyPublisher<String, Error> {
+    public static func login(username: String, password: String) -> AnyPublisher<String, Error> {
         let vals = (0..<4).map { _ in arc4random_uniform(1000000) }
         let deviceID = String(format: "%06d-%06d-%06d-%06d", vals[0], vals[1], vals[2], vals[3])
         let credentials = ["identifier": username,
@@ -74,7 +74,7 @@ class SoundCloud {
             .eraseToAnyPublisher()
     }
     
-    internal func authorized<T>(_ request: APIRequest<T>, queryItems: [URLQueryItem] = []) -> URLRequest {
+    private func authorized<T>(_ request: APIRequest<T>, queryItems: [URLQueryItem] = []) -> URLRequest {
         let url = URL(string: "https://api-v2.soundcloud.com/\(request.path)")!
         var items = queryItems
         if let parameters = request.queryParameters {
@@ -101,7 +101,7 @@ class SoundCloud {
     
     // MARK: - Requests
     
-    func get<T: Decodable>(_ request: APIRequest<T>) -> AnyPublisher<T, Error> {
+    public func get<T: Decodable>(_ request: APIRequest<T>) -> AnyPublisher<T, Error> {
         if request.needsUserID && user == nil {
             return Fail(error: NoUserError())
                 .eraseToAnyPublisher()
@@ -110,7 +110,7 @@ class SoundCloud {
         return get(authorized(request))
     }
     
-    func get<T: Decodable>(_ request: APIRequest<Slice<T>>, limit: Int? = 16) -> AnyPublisher<Slice<T>, Error> {
+    public func get<T: Decodable>(_ request: APIRequest<Slice<T>>, limit: Int? = 16) -> AnyPublisher<Slice<T>, Error> {
         if request.needsUserID && user == nil {
             return Fail(error: NoUserError())
                 .eraseToAnyPublisher()
@@ -120,7 +120,7 @@ class SoundCloud {
         return get(authorized(request, queryItems: queryItems ?? []))
     }
     
-    func get<T: Decodable>(next slice: Slice<T>, limit: Int = 16) -> AnyPublisher<Slice<T>, Error> {
+    public func get<T: Decodable>(next slice: Slice<T>, limit: Int = 16) -> AnyPublisher<Slice<T>, Error> {
         guard let next = slice.next else {
             return Fail(error: NoNextSliceError())
                 .eraseToAnyPublisher()
@@ -138,7 +138,7 @@ class SoundCloud {
             .eraseToAnyPublisher()
     }
     
-    func getMediaURL(with url: URL) -> AnyPublisher<URL, URLError> {
+    public func getMediaURL(with url: URL) -> AnyPublisher<URL, URLError> {
         return URLSession.shared.dataTaskPublisher(for: authorized(url))
             .map { res in
                 let payload = try! JSONSerialization.jsonObject(with: res.data, options: .allowFragments) as! [String: String]
@@ -147,7 +147,7 @@ class SoundCloud {
             .eraseToAnyPublisher()
     }
     
-    func perform(_ request: APIRequest<String>) -> AnyPublisher<Bool, Error> {
+    public func perform(_ request: APIRequest<String>) -> AnyPublisher<Bool, Error> {
         return URLSession.shared.dataTaskPublisher(for: authorized(request))
             .map { $0.data }
             .decode(type: String.self, decoder: decoder)

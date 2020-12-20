@@ -8,7 +8,7 @@
 
 import Foundation
 
-protocol SoundCloudIdentifiable: Identifiable, Hashable {
+public protocol SoundCloudIdentifiable: Identifiable, Hashable {
     
     var id: Int { get }
     
@@ -16,11 +16,11 @@ protocol SoundCloudIdentifiable: Identifiable, Hashable {
 
 extension SoundCloudIdentifiable {
     
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
     
-    static func ==(lhs: Self, rhs: Self) -> Bool {
+    public static func ==(lhs: Self, rhs: Self) -> Bool {
         return lhs.id == rhs.id
     }
     

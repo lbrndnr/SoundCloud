@@ -8,21 +8,21 @@
 
 import Foundation
 
-enum Tracks {
+public enum Tracks {
     case id([Int])
     case full([Track])
 }
 
-struct Playlist: SoundCloudIdentifiable {
+public struct Playlist: SoundCloudIdentifiable {
     
-    var id: Int
-    var title: String
-    var description: String?
-    var artworkURL: URL?
-    var permalinkURL: URL
-    var tracks: Tracks
-    var isPublic: Bool
-    var isAlbum: Bool
+    public var id: Int
+    public var title: String
+    public var description: String?
+    public var artworkURL: URL?
+    public var permalinkURL: URL
+    public var tracks: Tracks
+    public var isPublic: Bool
+    public var isAlbum: Bool
     
 }
 
@@ -39,7 +39,7 @@ extension Playlist: Decodable {
         case isAlbum = "is_album"
     }
     
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(Int.self, forKey: .id)
         title = try container.decode(String.self, forKey: .title)

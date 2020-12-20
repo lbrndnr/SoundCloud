@@ -9,12 +9,12 @@
 import Foundation
 import Combine
 
-struct NoNextSliceError: Error { }
+public struct NoNextSliceError: Error { }
 
-struct Slice<T: Decodable>: Decodable {
+public struct Slice<T: Decodable>: Decodable {
     
-    var collection: [T]
-    var next: URL?
+    public var collection: [T]
+    public var next: URL?
     
     enum CodingKeys: String, CodingKey {
         case collection

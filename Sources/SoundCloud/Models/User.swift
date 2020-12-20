@@ -10,16 +10,16 @@ import Foundation
 
 struct NoUserError: Error { }
 
-struct User: SoundCloudIdentifiable {
+public struct User: SoundCloudIdentifiable {
     
-    var id: Int
-    var name: String
-    var username: String
-    var followerCount: Int?
-    var followingCount: Int?
-    var avatarURL: URL
+    public var id: Int
+    public var name: String
+    public var username: String
+    public var followerCount: Int?
+    public var followingCount: Int?
+    public var avatarURL: URL
     
-    var playlists: [Playlist]?
+    public var playlists: [Playlist]?
     
 }
 

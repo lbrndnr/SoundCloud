@@ -8,28 +8,28 @@
 
 import Foundation
 
-struct Post: SoundCloudIdentifiable {
+public struct Post: SoundCloudIdentifiable {
     
-    enum Kind {
+    public enum Kind {
         case track(Track)
         case trackRepost(Track)
         case playlist(Playlist)
         case playlistRepost(Playlist)
     }
     
-    enum Item {
+    public enum Item {
         case track(Track)
         case playlist(Playlist)
     }
     
-    var id: Int
-    var date: Date
-    var caption: String?
+    public var id: Int
+    public var date: Date
+    public var caption: String?
     
-    var kind: Kind
-    var user: User
+    public var kind: Kind
+    public var user: User
     
-    var isRepost: Bool {
+    public var isRepost: Bool {
         switch kind {
         case .trackRepost(_): return true
         case .playlistRepost(_): return true
@@ -37,7 +37,7 @@ struct Post: SoundCloudIdentifiable {
         }
     }
     
-    var isTrack: Bool {
+    public var isTrack: Bool {
         switch kind {
         case .track(_): return true
         case .trackRepost(_): return true
@@ -45,7 +45,7 @@ struct Post: SoundCloudIdentifiable {
         }
     }
     
-    var tracks: [Track] {
+    public var tracks: [Track] {
         switch kind {
         case .track(let track): return [track]
         case .trackRepost(let track): return [track]
@@ -58,7 +58,7 @@ struct Post: SoundCloudIdentifiable {
         }
     }
     
-    var item: Item {
+    public var item: Item {
         switch kind {
         case .track(let track): return .track(track)
         case .trackRepost(let track): return .track(track)
@@ -71,7 +71,7 @@ struct Post: SoundCloudIdentifiable {
 
 struct UndefinedPostTypeError: Error {
     
-    let type: String
+    public var type: String
     
 }
 
@@ -87,7 +87,7 @@ extension Post: Decodable {
         case user
     }
     
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let uuid = try container.decode(String.self, forKey: .id)
         id = uuid.hashValue

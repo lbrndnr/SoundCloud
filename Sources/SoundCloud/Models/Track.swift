@@ -8,18 +8,18 @@
 
 import Foundation
 
-struct Track: SoundCloudIdentifiable {
+public struct Track: SoundCloudIdentifiable {
     
-    var id: Int
-    var title: String
-    var description: String?
-    var artworkURL: URL?
-    var streamURL: URL
-    var permalinkURL: URL
-    var duration: Float
-    var playbackCount: Int
-    var likeCount: Int
-    var repostCount: Int
+    public var id: Int
+    public var title: String
+    public var description: String?
+    public var artworkURL: URL?
+    public var streamURL: URL
+    public var permalinkURL: URL
+    public var duration: Float
+    public var playbackCount: Int
+    public var likeCount: Int
+    public var repostCount: Int
     
 }
 
@@ -51,7 +51,7 @@ extension Track: Decodable {
         case repostCount = "reposts_count"
     }
     
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         id = try container.decode(Int.self, forKey: .id)

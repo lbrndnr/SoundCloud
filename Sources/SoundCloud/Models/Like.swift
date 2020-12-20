@@ -8,14 +8,14 @@
 
 import Foundation
 
-struct Like<T: SoundCloudIdentifiable & Decodable>: SoundCloudIdentifiable {
+public struct Like<T: SoundCloudIdentifiable & Decodable>: SoundCloudIdentifiable {
     
-    var id: Int {
+    public var id: Int {
         return item.id
     }
     
-    var date: Date
-    var item: T
+    public var date: Date
+    public var item: T
     
 }
 
@@ -27,7 +27,7 @@ extension Like: Decodable {
         case playlist
     }
     
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         date = try container.decode(Date.self, forKey: .date)

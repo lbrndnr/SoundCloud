@@ -8,13 +8,13 @@
 
 import Foundation
 
-struct Recommendation: SoundCloudIdentifiable {
+public struct Recommendation: SoundCloudIdentifiable {
     
-    var id: Int {
+    public var id: Int {
         return user.id
     }
     
-    var user: User
+    public var user: User
     
 }
 
@@ -24,7 +24,7 @@ extension Recommendation: Decodable {
         case user
     }
     
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         user = try container.decode(User.self, forKey: .user)
     }
