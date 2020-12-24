@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct NoUserError: Error { }
+public struct NoUserError: Error { }
 
 public struct User: SoundCloudIdentifiable {
     

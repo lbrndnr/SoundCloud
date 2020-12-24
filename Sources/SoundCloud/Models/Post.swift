@@ -52,7 +52,7 @@ public struct Post: SoundCloudIdentifiable {
         case .playlist(let playlist): fallthrough
         case .playlistRepost(let playlist):
             if let wrapper = playlist.tracks,
-               case let Tracks.full(tracks) = wrapper {
+               case let .full(tracks) = wrapper {
                 return tracks
             }
             return []
@@ -70,7 +70,7 @@ public struct Post: SoundCloudIdentifiable {
     
 }
 
-struct UndefinedPostTypeError: Error {
+public struct UndefinedPostTypeError: Error {
     
     public var type: String
     

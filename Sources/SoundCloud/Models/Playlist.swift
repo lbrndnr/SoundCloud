@@ -8,12 +8,12 @@
 
 import Foundation
 
-public enum Tracks {
-    case id([Int])
-    case full([Track])
-}
-
 public struct Playlist: SoundCloudIdentifiable {
+    
+    public enum Tracks {
+        case id([Int])
+        case full([Track])
+    }
     
     public var id: Int
     public var title: String

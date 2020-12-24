@@ -11,7 +11,7 @@ import Combine
 
 private let clientID = "buRV7bRM79DWp3a09HG1kQEHiBccIBeG"
 
-struct AuthenticationError: Error {}
+public struct AuthenticationError: Error {}
 
 public class SoundCloud {
     
