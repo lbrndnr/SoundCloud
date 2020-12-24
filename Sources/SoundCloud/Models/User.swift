@@ -42,11 +42,3 @@ extension User: Encodable, Decodable {
     }
     
 }
-
-extension User: Filterable {
-    
-    func contains(_ text: String) -> Bool {
-        return name.contains(text) || username.contains(text)
-    }
-    
-}

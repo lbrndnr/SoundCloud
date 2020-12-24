@@ -72,11 +72,3 @@ extension Playlist: Decodable {
     }
     
 }
-
-extension Playlist: Filterable {
-    
-    func contains(_ text: String) -> Bool {
-        return title.contains(text)
-    }
-    
-}

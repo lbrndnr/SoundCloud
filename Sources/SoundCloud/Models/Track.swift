@@ -78,11 +78,3 @@ extension Track: Decodable {
     }
     
 }
-
-extension Track: Filterable {
-    
-    func contains(_ text: String) -> Bool {
-        return title.contains(text) || (description?.contains(text) ?? false)
-    }
-    
-}

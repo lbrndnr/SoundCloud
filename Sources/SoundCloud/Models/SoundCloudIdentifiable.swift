@@ -25,9 +25,3 @@ extension SoundCloudIdentifiable {
     }
     
 }
-
-protocol Filterable {
-    
-    func contains(_ text: String) -> Bool
-    
-}
