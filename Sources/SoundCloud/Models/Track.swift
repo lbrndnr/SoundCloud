@@ -24,17 +24,23 @@ public struct Track: SoundCloudIdentifiable {
 }
 
 private func audioFile(from transcodings: [[String: Any]]) -> [String: Any] {
-    func isFormatCompatible(from trasncoding: [String: Any]) -> Bool {
+    func isFormatProgressive(from trasncoding: [String: Any]) -> Bool {
         guard let formatProtocol = trasncoding["format"] as? [String: String] else { return false }
         
         return formatProtocol["protocol"] == "progressive"
     }
     
-    let hqFile = transcodings.filter { ($0["quality"] as! String) == "hq" && isFormatCompatible(from: $0) }
+    let hqFileProgressive = transcodings.filter { ($0["quality"] as! String) == "hq" && isFormatProgressive(from: $0) }
         .first
-    let sqFile = transcodings.filter { ($0["quality"] as! String) == "sq" && isFormatCompatible(from: $0) }
-        .first!
-    return hqFile ?? sqFile
+    let sqFileProgressive = transcodings.filter { ($0["quality"] as! String) == "sq" && isFormatProgressive(from: $0) }
+        .first
+
+    let hqFile = transcodings.filter { ($0["quality"] as! String) == "hq" }
+        .first
+    let sqFile = transcodings.filter { ($0["quality"] as! String) == "sq" }
+        .first
+    
+    return (hqFileProgressive ?? sqFileProgressive ?? hqFile ?? sqFile)!
 }
 
 extension Track: Decodable {
