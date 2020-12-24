@@ -16,6 +16,7 @@ public struct APIRequest<T: Decodable> {
         case stream
         case whoToFollow
         case history
+        case search(String)
         
         case tracks([Int])
         case trackLikes(Int)
@@ -51,6 +52,10 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<Slice<HistoryItem>>(url: .history)
     }
     
+    public static func search(_ query: String) -> APIRequest<Slice<Some>> {
+        return APIRequest<Slice<Some>>(url: .search(query))
+    }
+    
     public static func tracks(_ ids: [Int]) -> APIRequest<[Track]> {
         return APIRequest<[Track]>(url: .tracks(ids))
     }
@@ -82,6 +87,7 @@ public struct APIRequest<T: Decodable> {
         case .stream: return "stream"
         case .whoToFollow: return "me/suggested/users/who_to_follow"
         case .history: return "me/play-history/tracks"
+        case .search(_): return "search"
         
         case .tracks(_): return "tracks"
         case .trackLikes(let id): return "users/\(id)/track_likes"
@@ -96,6 +102,7 @@ public struct APIRequest<T: Decodable> {
     public var queryParameters: [String: String]? {
         switch url {
         case .tracks(let ids): return ["ids": ids.map { String($0) }.joined(separator: ",")]
+        case .search(let query): return ["q": query]
         default: return nil
         }
     }
