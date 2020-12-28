@@ -26,7 +26,6 @@ public enum Some: SoundCloudIdentifiable {
         }
     }
     
-    
 }
 
 extension Some: Decodable {
