@@ -81,13 +81,12 @@ public class SoundCloud {
             items += zip(parameters.keys, parameters.values).map { URLQueryItem(name: $0.0, value: $0.1)}
         }
         
-        var req = URLRequest(url: authorized(url, queryItems: items))
+        var req = authorized(url, queryItems: items)
         req.httpMethod = request.httpMethod
-//        req.cachePolicy = .returnCacheDataElseLoad
         return req
     }
     
-    private func authorized(_ url: URL, queryItems: [URLQueryItem] = []) -> URL {
+    private func authorized(_ url: URL, queryItems: [URLQueryItem] = []) -> URLRequest {
         var components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
         let authItems =  [URLQueryItem(name: "oauth_token", value: accessToken!)]
         
@@ -96,7 +95,9 @@ public class SoundCloud {
         let urlItems = components.queryItems?.filter { !explicitKeys.contains($0.name) }
         components.queryItems = (urlItems ?? []) + explicitItems
         
-        return components.url!
+        var req = URLRequest(url: components.url!)
+        req.cachePolicy = .returnCacheDataElseLoad
+        return req
     }
     
     // MARK: - Requests
@@ -127,7 +128,7 @@ public class SoundCloud {
         }
         
         let queryItems = [URLQueryItem(name: "limit", value: String(min(limit, 150)))]
-        let request = URLRequest(url: authorized(next, queryItems: queryItems))
+        let request = authorized(next, queryItems: queryItems)
         return get(request)
     }
     
