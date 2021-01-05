@@ -95,9 +95,7 @@ public class SoundCloud {
         let urlItems = components.queryItems?.filter { !explicitKeys.contains($0.name) }
         components.queryItems = (urlItems ?? []) + explicitItems
         
-        var req = URLRequest(url: components.url!)
-//        req.cachePolicy = .returnCacheDataElseLoad
-        return req
+        return URLRequest(url: components.url!)
     }
     
     // MARK: - Requests
