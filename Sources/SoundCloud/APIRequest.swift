@@ -14,6 +14,7 @@ public struct APIRequest<T: Decodable> {
         case me
         case albumsAndPlaylists
         case stream
+        case userStream(Int)
         case whoToFollow
         case history
         case search(String)
@@ -42,6 +43,10 @@ public struct APIRequest<T: Decodable> {
     
     public static func stream() -> APIRequest<Slice<Post>> {
         return APIRequest<Slice<Post>>(url: .stream)
+    }
+    
+    public static func stream(of user: User) -> APIRequest<Slice<Post>> {
+        return APIRequest<Slice<Post>>(url: .userStream(user.id))
     }
     
     public static func whoToFollow() -> APIRequest<Slice<Recommendation>> {
@@ -85,6 +90,7 @@ public struct APIRequest<T: Decodable> {
         case .me: return "me"
         case .albumsAndPlaylists: return "me/library/albums_playlists_and_system_playlists"
         case .stream: return "stream"
+        case .userStream(let id): return "stream/users/\(id)"
         case .whoToFollow: return "me/suggested/users/who_to_follow"
         case .history: return "me/play-history/tracks"
         case .search(_): return "search"
