@@ -96,7 +96,7 @@ public class SoundCloud {
         components.queryItems = (urlItems ?? []) + explicitItems
         
         var req = URLRequest(url: components.url!)
-        req.cachePolicy = .returnCacheDataElseLoad
+//        req.cachePolicy = .returnCacheDataElseLoad
         return req
     }
     
