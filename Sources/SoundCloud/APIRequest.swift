@@ -14,10 +14,12 @@ public struct APIRequest<T: Decodable> {
         case me
         case albumsAndPlaylists
         case stream
-        case userStream(Int)
         case whoToFollow
         case history
         case search(String)
+        
+        case user(Int)
+        case userStream(Int)
         
         case tracks([Int])
         case trackLikes(Int)
@@ -45,10 +47,6 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<Slice<Post>>(url: .stream)
     }
     
-    public static func stream(of user: User) -> APIRequest<Slice<Post>> {
-        return APIRequest<Slice<Post>>(url: .userStream(user.id))
-    }
-    
     public static func whoToFollow() -> APIRequest<Slice<Recommendation>> {
         return APIRequest<Slice<Recommendation>>(url: .whoToFollow)
     }
@@ -59,6 +57,14 @@ public struct APIRequest<T: Decodable> {
     
     public static func search(_ query: String) -> APIRequest<Slice<Some>> {
         return APIRequest<Slice<Some>>(url: .search(query))
+    }
+    
+    public static func user(with id: Int) -> APIRequest<User> {
+        return APIRequest<User>(url: .user(id))
+    }
+    
+    public static func stream(of user: User) -> APIRequest<Slice<Post>> {
+        return APIRequest<Slice<Post>>(url: .userStream(user.id))
     }
     
     public static func tracks(_ ids: [Int]) -> APIRequest<[Track]> {
@@ -90,10 +96,12 @@ public struct APIRequest<T: Decodable> {
         case .me: return "me"
         case .albumsAndPlaylists: return "me/library/albums_playlists_and_system_playlists"
         case .stream: return "stream"
-        case .userStream(let id): return "stream/users/\(id)"
         case .whoToFollow: return "me/suggested/users/who_to_follow"
         case .history: return "me/play-history/tracks"
         case .search(_): return "search"
+            
+        case .user(let id): return "users/\(id)"
+        case .userStream(let id): return "stream/users/\(id)"
         
         case .tracks(_): return "tracks"
         case .trackLikes(let id): return "users/\(id)/track_likes"
