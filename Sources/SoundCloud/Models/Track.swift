@@ -14,7 +14,7 @@ public struct Track: SoundCloudIdentifiable {
     public var title: String
     public var description: String?
     public var artworkURL: URL?
-    public var streamURL: URL
+    public var streamURL: URL?
     public var permalinkURL: URL
     public var duration: Float
     public var playbackCount: Int
@@ -24,7 +24,7 @@ public struct Track: SoundCloudIdentifiable {
     
 }
 
-private func audioFile(from transcodings: [[String: Any]]) -> [String: Any] {
+private func audioFile(from transcodings: [[String: Any]]) -> [String: Any]? {
     func isFormatProgressive(from trasncoding: [String: Any]) -> Bool {
         guard let formatProtocol = trasncoding["format"] as? [String: String] else { return false }
         
@@ -41,7 +41,7 @@ private func audioFile(from transcodings: [[String: Any]]) -> [String: Any] {
     let sqFile = transcodings.filter { ($0["quality"] as! String) == "sq" }
         .first
     
-    return (hqFileProgressive ?? sqFileProgressive ?? hqFile ?? sqFile)!
+    return hqFileProgressive ?? sqFileProgressive ?? hqFile ?? sqFile
 }
 
 extension Track: Decodable {
@@ -70,10 +70,13 @@ extension Track: Decodable {
         
         let media: [String: [[String: Any]]] = try container.decode([String: Any].self, forKey: .media) as! [String : [[String : Any]]]
         let transcodings = media["transcodings"]!
-        let file = audioFile(from: transcodings)
-        
-        streamURL = URL(string: file["url"] as! String)!
-        duration = Float(file["duration"]! as! Int)/1000
+        if let file = audioFile(from: transcodings) {
+            streamURL = URL(string: file["url"] as! String)!
+            duration = Float(file["duration"]! as! Int)/1000
+        }
+        else {
+            duration = 0
+        }
         playbackCount = try container.decodeIfPresent(Int.self, forKey: .playbackCount) ?? 0
         likeCount = try container.decodeIfPresent(Int.self, forKey: .likeCount) ?? 0
         repostCount = try container.decodeIfPresent(Int.self, forKey: .repostCount) ?? 0
