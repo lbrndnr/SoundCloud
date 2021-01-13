@@ -10,29 +10,20 @@ import Foundation
 
 public struct Playlist: SoundCloudIdentifiable {
     
-    public enum Tracks {
-        case id([Int])
-        case full([Track])
-    }
-    
     public var id: Int
     public var title: String
     public var description: String?
     public var artworkURL: URL?
     public var permalinkURL: URL
-    public var tracks: Tracks?
     public var isPublic: Bool
     public var secretToken: String?
     public var isAlbum: Bool
     public var date: Date
     
-    public var trackIDs: [Int]? {
-        switch tracks {
-        case .full(let tracks): return tracks.map { $0.id }
-        case .id(let ids): return ids
-        case .none: return nil
-        }
-    }
+    /// For some requests, 5 full tracks are sent along.
+    /// Their ids are a prefix of `trackIDs`
+    public var tracks: [Track]?
+    public var trackIDs: [Int]?
     
 }
 
@@ -66,12 +57,13 @@ extension Playlist: Decodable {
         if container.contains(.tracks) {
             do {
                 let tracks = try container.decode([Track].self, forKey: .tracks)
-                self.tracks = .full(tracks)
+                self.tracks = tracks
+                self.trackIDs = tracks.map { $0.id }
             }
             catch {
                 if let tracks = try container.decode([Any].self, forKey: .tracks) as? [[String : Any]] {
                     let ids = tracks.map { $0["id"] as! Int }
-                    self.tracks = .id(ids)
+                    self.trackIDs = ids
                 }
             }
         }

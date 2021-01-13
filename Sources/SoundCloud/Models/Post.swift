@@ -50,12 +50,7 @@ public struct Post: SoundCloudIdentifiable {
         case .track(let track): return [track]
         case .trackRepost(let track): return [track]
         case .playlist(let playlist): fallthrough
-        case .playlistRepost(let playlist):
-            if let wrapper = playlist.tracks,
-               case let .full(tracks) = wrapper {
-                return tracks
-            }
-            return []
+        case .playlistRepost(let playlist): return playlist.tracks ?? []
         }
     }
     
