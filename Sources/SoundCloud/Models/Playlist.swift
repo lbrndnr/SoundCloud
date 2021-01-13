@@ -22,6 +22,7 @@ public struct Playlist: SoundCloudIdentifiable {
     public var permalinkURL: URL
     public var tracks: Tracks?
     public var isPublic: Bool
+    public var secretToken: String?
     public var isAlbum: Bool
     public var date: Date
     
@@ -44,6 +45,7 @@ extension Playlist: Decodable {
         case artworkURL = "artwork_url"
         case permalinkURL = "permalink_url"
         case isPublic = "public"
+        case secretToken = "secret_token"
         case tracks
         case isAlbum = "is_album"
         case date = "created_at"
@@ -59,6 +61,7 @@ extension Playlist: Decodable {
         isPublic = try container.decode(Bool.self, forKey: .isPublic)
         isAlbum = try container.decode(Bool.self, forKey: .isAlbum)
         date = try container.decode(Date.self, forKey: .date)
+        secretToken = try container.decodeIfPresent(String.self, forKey: .secretToken)
         
         if container.contains(.tracks) {
             do {
