@@ -88,7 +88,7 @@ public class SoundCloud {
     
     private func authorized(_ url: URL, queryItems: [URLQueryItem] = []) -> URLRequest {
         var components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
-        let authItems =  [URLQueryItem(name: "oauth_token", value: accessToken!)]
+        let authItems = [URLQueryItem(name: "oauth_token", value: accessToken!)]
         
         let explicitItems = authItems + queryItems
         let explicitKeys = explicitItems.map { $0.name }
@@ -137,12 +137,20 @@ public class SoundCloud {
             .eraseToAnyPublisher()
     }
     
-    public func getMediaURL(with url: URL) -> AnyPublisher<URL, URLError> {
-        return URLSession.shared.dataTaskPublisher(for: authorized(url))
-            .map { res in
-                let payload = try! JSONSerialization.jsonObject(with: res.data, options: .allowFragments) as! [String: String]
-                return URL(string: payload["url"]!)!
-            }
+    public func get<T: Decodable>(_ request: ResourceRequest<T>) -> AnyPublisher<T, Error> {
+        let req = request.needsAuthorization ? authorized(request.url) : URLRequest(url: request.url)
+        let publisher = URLSession.shared.dataTaskPublisher(for: req)
+        
+        if let decoder = request.decoder {
+            return publisher.tryMap { data, _ in
+                let payload = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [AnyHashable: Any]
+                return try decoder(payload)
+            }.eraseToAnyPublisher()
+        }
+            
+        return publisher
+            .map { $0.data }
+            .decode(type: T.self, decoder: decoder)
             .eraseToAnyPublisher()
     }
     
