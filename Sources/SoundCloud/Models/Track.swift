@@ -14,6 +14,7 @@ public struct Track: SoundCloudIdentifiable {
     public var title: String
     public var description: String?
     public var artworkURL: URL?
+    public var waveformURL: URL
     public var streamURL: URL?
     public var permalinkURL: URL
     public var duration: Float
@@ -51,6 +52,7 @@ extension Track: Decodable {
         case title
         case description
         case artworkURL = "artwork_url"
+        case waveformURL = "waveform_url"
         case permalinkURL = "permalink_url"
         case media
         case playbackCount = "playback_count"
@@ -66,6 +68,7 @@ extension Track: Decodable {
         title = try container.decode(String.self, forKey: .title)
         description = try container.decodeIfPresent(String.self, forKey: .description)
         artworkURL = try container.decodeIfPresent(URL.self, forKey: .artworkURL)
+        waveformURL = try container.decode(URL.self, forKey: .waveformURL)
         permalinkURL = try container.decode(URL.self, forKey: .permalinkURL)
         
         let media: [String: [[String: Any]]] = try container.decode([String: Any].self, forKey: .media) as! [String : [[String : Any]]]
