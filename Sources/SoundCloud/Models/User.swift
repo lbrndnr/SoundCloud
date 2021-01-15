@@ -16,7 +16,7 @@ public struct User: SoundCloudIdentifiable {
     public var username: String
     public var firstName: String
     public var lastName: String
-    public var name: String { "\(firstName) \(lastName)" }
+    public var name: String
     public var description: String?
     
     public var city: String?
@@ -33,6 +33,7 @@ public struct User: SoundCloudIdentifiable {
         self.username = username
         self.firstName = firstName
         self.lastName = lastName
+        self.name = "\(firstName) \(lastName)"
         self.avatarURL = avatarURL
     }
     
@@ -45,6 +46,7 @@ extension User: Encodable, Decodable {
         case username = "permalink"
         case firstName = "first_name"
         case lastName = "last_name"
+        case name = "full_name"
         case description = "description"
         case city = "city"
         case countryCode = "country_code"

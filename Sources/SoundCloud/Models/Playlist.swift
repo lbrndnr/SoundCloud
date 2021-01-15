@@ -19,6 +19,7 @@ public struct Playlist: SoundCloudIdentifiable {
     public var secretToken: String?
     public var isAlbum: Bool
     public var date: Date
+    public var user: User
     
     /// For some requests, 5 full tracks are sent along.
     /// Their ids are a prefix of `trackIDs`
@@ -40,6 +41,7 @@ extension Playlist: Decodable {
         case tracks
         case isAlbum = "is_album"
         case date = "created_at"
+        case user
     }
     
     public init(from decoder: Decoder) throws {
@@ -53,6 +55,7 @@ extension Playlist: Decodable {
         isAlbum = try container.decode(Bool.self, forKey: .isAlbum)
         date = try container.decode(Date.self, forKey: .date)
         secretToken = try container.decodeIfPresent(String.self, forKey: .secretToken)
+        user = try container.decode(User.self, forKey: .user)
         
         if container.contains(.tracks) {
             do {

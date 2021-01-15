@@ -22,6 +22,7 @@ public struct Track: SoundCloudIdentifiable {
     public var likeCount: Int
     public var repostCount: Int
     public var date: Date
+    public var user: User
     
 }
 
@@ -59,6 +60,7 @@ extension Track: Decodable {
         case likeCount = "likes_count"
         case repostCount = "reposts_count"
         case date = "created_at"
+        case user
     }
     
     public init(from decoder: Decoder) throws {
@@ -84,6 +86,7 @@ extension Track: Decodable {
         likeCount = try container.decodeIfPresent(Int.self, forKey: .likeCount) ?? 0
         repostCount = try container.decodeIfPresent(Int.self, forKey: .repostCount) ?? 0
         date = try container.decode(Date.self, forKey: .date)
+        user = try container.decode(User.self, forKey: .user)
     }
     
 }
