@@ -9,8 +9,6 @@
 import Foundation
 import Combine
 
-private let clientID = "buRV7bRM79DWp3a09HG1kQEHiBccIBeG"
-
 public struct AuthenticationError: Error {}
 
 public class SoundCloud {
@@ -42,37 +40,6 @@ public class SoundCloud {
     }
     
     // MARK: - Authentication
-    
-    public static func login(username: String, password: String) -> AnyPublisher<String, Error> {
-        let vals = (0..<4).map { _ in arc4random_uniform(1000000) }
-        let deviceID = String(format: "%06d-%06d-%06d-%06d", vals[0], vals[1], vals[2], vals[3])
-        let credentials = ["identifier": username,
-                           "password": password]
-        let agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.1 Safari/605.1.15"
-        let body = ["client_id": clientID,
-                    "recaptcha_pubkey": "6Ld72JcUAAAAAItDloUGqg6H38KK5j08VuQlegV1",
-                    "recaptcha_response": nil,
-                    "credentials": credentials,
-                    "signature": "8:1-1-16684-373-1296000-1280-8-8:98f9f2:3",
-                    "device_id": deviceID,
-                    "user_agent": agent] as [String : Any?]
-        let jsonBody = try! JSONSerialization.data(withJSONObject: body, options: .fragmentsAllowed)
-        
-        var components = URLComponents(string: "https://api-auth.soundcloud.com/web-auth/sign-in/password")!
-        components.queryItems = [URLQueryItem(name: "client_id", value: clientID)]
-        var request = URLRequest(url: components.url!)
-        request.httpMethod = "POST"
-        request.httpBody = jsonBody
-        
-        return URLSession.shared.dataTaskPublisher(for: request)
-            .tryMap { res in
-                let payload = try JSONSerialization.jsonObject(with: res.data, options: .allowFragments) as! [String: Any]
-                guard let session = payload["session"] as? [String: String] else { throw AuthenticationError() }
-                guard let token = session["access_token"] else { throw AuthenticationError() }
-                return token
-            }
-            .eraseToAnyPublisher()
-    }
     
     private func authorized<T>(_ request: APIRequest<T>, queryItems: [URLQueryItem] = []) -> URLRequest {
         let url = URL(string: "https://api-v2.soundcloud.com/\(request.path)")!
