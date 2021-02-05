@@ -15,6 +15,8 @@ public struct APIRequest<T: Decodable> {
         case albumsAndPlaylists
         case stream
         case whoToFollow
+        case followings(Int)
+        case followers(Int)
         case history
         case search(String)
         
@@ -47,6 +49,14 @@ public struct APIRequest<T: Decodable> {
     
     public static func whoToFollow() -> APIRequest<Slice<Recommendation>> {
         return APIRequest<Slice<Recommendation>>(api: .whoToFollow)
+    }
+    
+    public static func followings(of user: User) -> APIRequest<Slice<User>> {
+        return APIRequest<Slice<User>>(api: .followings(user.id))
+    }
+    
+    public static func followers(of user: User) -> APIRequest<Slice<User>> {
+        return APIRequest<Slice<User>>(api: .followers(user.id))
     }
     
     public static func history() -> APIRequest<Slice<HistoryItem>> {
@@ -97,6 +107,8 @@ public struct APIRequest<T: Decodable> {
         case .albumsAndPlaylists: return "me/library/albums_playlists_and_system_playlists"
         case .stream: return "stream"
         case .whoToFollow: return "me/suggested/users/who_to_follow"
+        case .followings(let id): return "users/\(id)/followings"
+        case .followers(let id): return "users/\(id)/followers"
         case .history: return "me/play-history/tracks"
         case .search(_): return "search"
             
