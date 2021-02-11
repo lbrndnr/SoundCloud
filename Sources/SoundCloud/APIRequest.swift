@@ -27,6 +27,8 @@ public struct APIRequest<T: Decodable> {
         case trackLikes(Int)
         case likeTrack(Int)
         case unlikeTrack(Int)
+        case reblogTrack(Int)
+        case unreblogTrack(Int)
         
         case playlist(Int)
     //    case playlistLikes(Int)
@@ -91,6 +93,14 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<String>(api: .unlikeTrack(track.id))
     }
     
+    public static func reblog(_ track: Track) -> APIRequest<String> {
+        return APIRequest<String>(api: .reblogTrack(track.id))
+    }
+    
+    public static func unreblog(_ track: Track) -> APIRequest<String> {
+        return APIRequest<String>(api: .unreblogTrack(track.id))
+    }
+    
     public static func playlist(_ id: Int) -> APIRequest<Playlist> {
         return APIRequest<Playlist>(api: .playlist(id))
     }
@@ -119,6 +129,8 @@ public struct APIRequest<T: Decodable> {
         case .trackLikes(let id): return "users/\(id)/track_likes"
         case .likeTrack(let trackID): fallthrough
         case .unlikeTrack(let trackID): return "users/\(SoundCloud.shared.user?.id ?? 0)/track_likes/\(trackID)"
+        case .reblogTrack(let trackID): fallthrough
+        case .unreblogTrack(let trackID): return "me/track_reposts/\(trackID)"
             
         case .playlist(let id): return "playlists/\(id)"
         case .addToPlaylist(let id, _): return "playlists/\(id)"
@@ -137,6 +149,8 @@ public struct APIRequest<T: Decodable> {
         switch api {
         case .likeTrack(_): return "PUT"
         case .unlikeTrack(_): return "DELETE"
+        case .reblogTrack(_): return "PUT"
+        case .unreblogTrack(_): return "DELETE"
         case .addToPlaylist(_, _): return "PUT"
         default: return "GET"
         }
