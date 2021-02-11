@@ -31,9 +31,11 @@ public struct APIRequest<T: Decodable> {
         case unreblogTrack(Int)
         
         case playlist(Int)
-    //    case playlistLikes(Int)
-    //    case likePlaylist(Int, Int)
-    //    case unlikePlaylist(Int, Int)
+//        case playlistLikes(Int)
+        case likePlaylist(Int)
+        case unlikePlaylist(Int)
+        case reblogPlaylist(Int)
+        case unreblogPlaylist(Int)
         case addToPlaylist(Int, [Int])
     }
     
@@ -105,6 +107,22 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<Playlist>(api: .playlist(id))
     }
     
+    public static func like(_ playlist: Playlist) -> APIRequest<String> {
+        return APIRequest<String>(api: .likePlaylist(playlist.id))
+    }
+    
+    public static func unlike(_ playlist: Playlist) -> APIRequest<String> {
+        return APIRequest<String>(api: .unlikePlaylist(playlist.id))
+    }
+    
+    public static func reblog(_ playlist: Playlist) -> APIRequest<String> {
+        return APIRequest<String>(api: .reblogPlaylist(playlist.id))
+    }
+    
+    public static func unreblog(_ playlist: Playlist) -> APIRequest<String> {
+        return APIRequest<String>(api: .unreblogPlaylist(playlist.id))
+    }
+    
     public static func add(to playlist: Playlist, trackIDs: [Int]) -> APIRequest<Playlist> {
         return APIRequest<Playlist>(api: .addToPlaylist(playlist.id, trackIDs))
     }
@@ -133,6 +151,10 @@ public struct APIRequest<T: Decodable> {
         case .unreblogTrack(let trackID): return "me/track_reposts/\(trackID)"
             
         case .playlist(let id): return "playlists/\(id)"
+        case .likePlaylist(let playlistID): fallthrough
+        case .unlikePlaylist(let playlistID): return "users/\(SoundCloud.shared.user?.id ?? 0)/playlist_likes/\(playlistID)"
+        case .reblogPlaylist(let playlistID): fallthrough
+        case .unreblogPlaylist(let playlistID): return "me/playlist_reposts/\(playlistID)"
         case .addToPlaylist(let id, _): return "playlists/\(id)"
         }
     }
@@ -151,6 +173,10 @@ public struct APIRequest<T: Decodable> {
         case .unlikeTrack(_): return "DELETE"
         case .reblogTrack(_): return "PUT"
         case .unreblogTrack(_): return "DELETE"
+        case .likePlaylist(_): return "PUT"
+        case .unlikePlaylist(_): return "DELETE"
+        case .reblogPlaylist(_): return "PUT"
+        case .unreblogPlaylist(_): return "DELETE"
         case .addToPlaylist(_, _): return "PUT"
         default: return "GET"
         }
@@ -175,6 +201,8 @@ public struct APIRequest<T: Decodable> {
         switch api {
         case .likeTrack(_): fallthrough
         case .unlikeTrack(_): return true
+        case .likePlaylist(_): fallthrough
+        case .unlikePlaylist(_): return true
         default: return false
         }
     }
