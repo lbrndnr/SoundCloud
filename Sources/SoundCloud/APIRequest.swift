@@ -27,15 +27,15 @@ public struct APIRequest<T: Decodable> {
         case trackLikes(Int)
         case likeTrack(Int)
         case unlikeTrack(Int)
-        case reblogTrack(Int)
-        case unreblogTrack(Int)
+        case repostTrack(Int)
+        case unrepostTrack(Int)
         
         case playlist(Int)
 //        case playlistLikes(Int)
         case likePlaylist(Int)
         case unlikePlaylist(Int)
-        case reblogPlaylist(Int)
-        case unreblogPlaylist(Int)
+        case repostPlaylist(Int)
+        case unrepostPlaylist(Int)
         case addToPlaylist(Int, [Int])
     }
     
@@ -95,12 +95,12 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<String>(api: .unlikeTrack(track.id))
     }
     
-    public static func reblog(_ track: Track) -> APIRequest<String> {
-        return APIRequest<String>(api: .reblogTrack(track.id))
+    public static func repost(_ track: Track) -> APIRequest<String> {
+        return APIRequest<String>(api: .repostTrack(track.id))
     }
     
-    public static func unreblog(_ track: Track) -> APIRequest<String> {
-        return APIRequest<String>(api: .unreblogTrack(track.id))
+    public static func unrepost(_ track: Track) -> APIRequest<String> {
+        return APIRequest<String>(api: .unrepostTrack(track.id))
     }
     
     public static func playlist(_ id: Int) -> APIRequest<Playlist> {
@@ -115,12 +115,12 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<String>(api: .unlikePlaylist(playlist.id))
     }
     
-    public static func reblog(_ playlist: Playlist) -> APIRequest<String> {
-        return APIRequest<String>(api: .reblogPlaylist(playlist.id))
+    public static func repost(_ playlist: Playlist) -> APIRequest<String> {
+        return APIRequest<String>(api: .repostPlaylist(playlist.id))
     }
     
-    public static func unreblog(_ playlist: Playlist) -> APIRequest<String> {
-        return APIRequest<String>(api: .unreblogPlaylist(playlist.id))
+    public static func unrepost(_ playlist: Playlist) -> APIRequest<String> {
+        return APIRequest<String>(api: .unrepostPlaylist(playlist.id))
     }
     
     public static func add(to playlist: Playlist, trackIDs: [Int]) -> APIRequest<Playlist> {
@@ -147,14 +147,14 @@ public struct APIRequest<T: Decodable> {
         case .trackLikes(let id): return "users/\(id)/track_likes"
         case .likeTrack(let trackID): fallthrough
         case .unlikeTrack(let trackID): return "users/\(SoundCloud.shared.user?.id ?? 0)/track_likes/\(trackID)"
-        case .reblogTrack(let trackID): fallthrough
-        case .unreblogTrack(let trackID): return "me/track_reposts/\(trackID)"
+        case .repostTrack(let trackID): fallthrough
+        case .unrepostTrack(let trackID): return "me/track_reposts/\(trackID)"
             
         case .playlist(let id): return "playlists/\(id)"
         case .likePlaylist(let playlistID): fallthrough
         case .unlikePlaylist(let playlistID): return "users/\(SoundCloud.shared.user?.id ?? 0)/playlist_likes/\(playlistID)"
-        case .reblogPlaylist(let playlistID): fallthrough
-        case .unreblogPlaylist(let playlistID): return "me/playlist_reposts/\(playlistID)"
+        case .repostPlaylist(let playlistID): fallthrough
+        case .unrepostPlaylist(let playlistID): return "me/playlist_reposts/\(playlistID)"
         case .addToPlaylist(let id, _): return "playlists/\(id)"
         }
     }
@@ -171,12 +171,12 @@ public struct APIRequest<T: Decodable> {
         switch api {
         case .likeTrack(_): return "PUT"
         case .unlikeTrack(_): return "DELETE"
-        case .reblogTrack(_): return "PUT"
-        case .unreblogTrack(_): return "DELETE"
+        case .repostTrack(_): return "PUT"
+        case .unrepostTrack(_): return "DELETE"
         case .likePlaylist(_): return "PUT"
         case .unlikePlaylist(_): return "DELETE"
-        case .reblogPlaylist(_): return "PUT"
-        case .unreblogPlaylist(_): return "DELETE"
+        case .repostPlaylist(_): return "PUT"
+        case .unrepostPlaylist(_): return "DELETE"
         case .addToPlaylist(_, _): return "PUT"
         default: return "GET"
         }
