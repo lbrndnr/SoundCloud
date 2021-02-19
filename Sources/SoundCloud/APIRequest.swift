@@ -29,6 +29,7 @@ public struct APIRequest<T: Decodable> {
         case unlikeTrack(Int)
         case repostTrack(Int)
         case unrepostTrack(Int)
+        case comments(Int)
         
         case playlist(Int)
 //        case playlistLikes(Int)
@@ -103,6 +104,10 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<String>(api: .unrepostTrack(track.id))
     }
     
+    public static func comments(of track: Track) -> APIRequest<Slice<Comment>> {
+        return APIRequest<Slice<Comment>>(api: .comments(track.id))
+    }
+    
     public static func playlist(_ id: Int) -> APIRequest<Playlist> {
         return APIRequest<Playlist>(api: .playlist(id))
     }
@@ -149,6 +154,7 @@ public struct APIRequest<T: Decodable> {
         case .unlikeTrack(let trackID): return "users/\(SoundCloud.shared.user?.id ?? 0)/track_likes/\(trackID)"
         case .repostTrack(let trackID): fallthrough
         case .unrepostTrack(let trackID): return "me/track_reposts/\(trackID)"
+        case .comments(let trackID): return "tracks/\(trackID)/comments"
             
         case .playlist(let id): return "playlists/\(id)"
         case .likePlaylist(let playlistID): fallthrough
@@ -163,6 +169,7 @@ public struct APIRequest<T: Decodable> {
         switch api {
         case .tracks(let ids): return ["ids": ids.map { String($0) }.joined(separator: ",")]
         case .search(let query): return ["q": query]
+        case .comments(_): return ["client_id": "D7YkmhAjzaV0qsA9e71yKXufTMyJAX2Q", "filter_replies": "0", "threaded": "1"]
         default: return nil
         }
     }
