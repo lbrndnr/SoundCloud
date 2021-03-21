@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Waveform {
+public class Waveform: Decodable {
     
     public var width: Int
     public var height: Int
@@ -19,14 +19,10 @@ public struct Waveform {
         self.samples = samples
     }
     
-    public init(width: Int, height: Int, repeatedSample: Int) {
+    public convenience init(width: Int, height: Int, repeatedSample: Int) {
         let samples = Array(repeating: repeatedSample, count: width)
         self.init(width: width, height: height, samples: samples)
     }
-    
-}
-
-extension Waveform: Decodable {
     
     enum CodingKeys: String, CodingKey {
         case width

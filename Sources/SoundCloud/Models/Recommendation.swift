@@ -8,23 +8,19 @@
 
 import Foundation
 
-public struct Recommendation: SoundCloudIdentifiable {
+public class Recommendation: SoundCloudIdentifiable, Decodable {
     
-    public var id: Int {
+    public var id: String {
         return user.id
     }
     
     public var user: User
-    
-}
-
-extension Recommendation: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case user
     }
     
-    public init(from decoder: Decoder) throws {
+    public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         user = try container.decode(User.self, forKey: .user)
     }

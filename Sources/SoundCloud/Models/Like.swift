@@ -8,32 +8,30 @@
 
 import Foundation
 
-public struct Like<T: SoundCloudIdentifiable & Decodable>: SoundCloudIdentifiable {
+public class Like<T: SoundCloudIdentifiable & Decodable>: SoundCloudIdentifiable, Decodable {
     
-    public var id: Int {
+    public var id: String {
         return item.id
     }
     
     public var date: Date
     public var item: T
-    
-}
-
-extension Like: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case date = "created_at"
         case track
-        case playlist
+        case userPlaylist = "playlist"
+        case systemPlaylist = "system_playlist"
     }
     
-    public init(from decoder: Decoder) throws {
+    public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         date = try container.decode(Date.self, forKey: .date)
         let track = try container.decodeIfPresent(T.self, forKey: .track)
-        let playlist = try container.decodeIfPresent(T.self, forKey: .playlist)
-        item = (track ?? playlist)!
+        let userPlaylist = try container.decodeIfPresent(T.self, forKey: .userPlaylist)
+        let systemPlaylist = try container.decodeIfPresent(T.self, forKey: .systemPlaylist)
+        item = (track ?? userPlaylist ?? systemPlaylist)!
     }
     
 }

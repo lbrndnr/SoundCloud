@@ -10,7 +10,7 @@ import Foundation
 
 public protocol SoundCloudIdentifiable: Identifiable, Hashable {
     
-    var id: Int { get }
+    var id: String { get }
     
 }
 

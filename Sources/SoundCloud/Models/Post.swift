@@ -8,21 +8,21 @@
 
 import Foundation
 
-public struct Post: SoundCloudIdentifiable {
+public class Post: SoundCloudIdentifiable, Decodable {
     
     public enum Kind {
         case track(Track)
         case trackRepost(Track)
-        case playlist(Playlist)
-        case playlistRepost(Playlist)
+        case playlist(UserPlaylist)
+        case playlistRepost(UserPlaylist)
     }
     
     public enum Item {
         case track(Track)
-        case playlist(Playlist)
+        case playlist(UserPlaylist)
     }
     
-    public var id: Int
+    public var id: String
     public var date: Date
     public var caption: String?
     
@@ -63,16 +63,7 @@ public struct Post: SoundCloudIdentifiable {
         }
     }
     
-}
-
-public struct UndefinedPostTypeError: Error {
     
-    public var type: String
-    
-}
-
-extension Post: Decodable {
-
     enum CodingKeys: String, CodingKey {
         case id = "uuid"
         case date = "created_at"
@@ -83,10 +74,9 @@ extension Post: Decodable {
         case user
     }
     
-    public init(from decoder: Decoder) throws {
+    public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let uuid = try container.decode(String.self, forKey: .id)
-        id = uuid.hashValue
+        id = try container.decode(String.self, forKey: .id)
         date = try container.decode(Date.self, forKey: .date)
         caption = try container.decodeIfPresent(String.self, forKey:.caption)
         
@@ -100,14 +90,20 @@ extension Post: Decodable {
             let track = try container.decode(Track.self, forKey: .track)
             kind = .trackRepost(track)
         case "playlist":
-            let playlist = try container.decode(Playlist.self, forKey: .playlist)
+            let playlist = try container.decode(UserPlaylist.self, forKey: .playlist)
             kind = .playlist(playlist)
         case "playlist-repost":
-            let playlist = try container.decode(Playlist.self, forKey: .playlist)
+            let playlist = try container.decode(UserPlaylist.self, forKey: .playlist)
             kind = .playlistRepost(playlist)
         default:
             throw UndefinedPostTypeError(type: type)
         }
     }
+    
+}
+
+public struct UndefinedPostTypeError: Error {
+    
+    public var type: String
     
 }

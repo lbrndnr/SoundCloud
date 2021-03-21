@@ -10,9 +10,9 @@ import Foundation
 
 public struct NoUserError: Error { }
 
-public struct User: SoundCloudIdentifiable {
+public class User: SoundCloudIdentifiable, Encodable, Decodable {
     
-    public var id: Int
+    public var id: String
     public var username: String
     public var firstName: String
     public var lastName: String
@@ -27,19 +27,6 @@ public struct User: SoundCloudIdentifiable {
     public var avatarURL: URL
     
     public var playlists: [Playlist]?
-    
-    public init(id: Int, username: String, firstName: String, lastName: String, avatarURL: URL) {
-        self.id = id
-        self.username = username
-        self.firstName = firstName
-        self.lastName = lastName
-        self.name = "\(firstName) \(lastName)"
-        self.avatarURL = avatarURL
-    }
-    
-}
-
-extension User: Encodable, Decodable {
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -54,5 +41,32 @@ extension User: Encodable, Decodable {
         case followingCount = "followings_count"
         case avatarURL = "avatar_url"
     }
+    
+    public init(id: String, username: String, firstName: String, lastName: String, avatarURL: URL) {
+        self.id = id
+        self.username = username
+        self.firstName = firstName
+        self.lastName = lastName
+        self.name = "\(firstName) \(lastName)"
+        self.avatarURL = avatarURL
+    }
+    
+    public required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        let rawID = try container.decode(Int.self, forKey: .id)
+        id = String(rawID)
+        username = try container.decode(String.self, forKey: .username)
+        firstName = try container.decode(String.self, forKey: .firstName)
+        lastName = try container.decode(String.self, forKey: .lastName)
+        name = try container.decode(String.self, forKey: .name)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        city = try container.decodeIfPresent(String.self, forKey: .city)
+        countryCode = try container.decodeIfPresent(String.self, forKey: .countryCode)
+        followerCount = try container.decodeIfPresent(Int.self, forKey: .followerCount)
+        followingCount = try container.decodeIfPresent(Int.self, forKey: .followingCount)
+        avatarURL = try container.decode(URL.self, forKey: .avatarURL)
+    }
+    
     
 }

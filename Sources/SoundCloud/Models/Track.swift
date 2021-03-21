@@ -8,9 +8,9 @@
 
 import Foundation
 
-public struct Track: SoundCloudIdentifiable {
+public class Track: SoundCloudIdentifiable, Decodable {
     
-    public var id: Int
+    public var id: String
     public var title: String
     public var description: String?
     public var artworkURL: URL?
@@ -24,30 +24,6 @@ public struct Track: SoundCloudIdentifiable {
     public var date: Date
     public var user: User
     
-}
-
-private func audioFile(from transcodings: [[String: Any]]) -> [String: Any]? {
-    func isFormatProgressive(from trasncoding: [String: Any]) -> Bool {
-        guard let formatProtocol = trasncoding["format"] as? [String: String] else { return false }
-        
-        return formatProtocol["protocol"] == "progressive"
-    }
-    
-    let hqFileProgressive = transcodings.filter { ($0["quality"] as! String) == "hq" && isFormatProgressive(from: $0) }
-        .first
-    let sqFileProgressive = transcodings.filter { ($0["quality"] as! String) == "sq" && isFormatProgressive(from: $0) }
-        .first
-
-    let hqFile = transcodings.filter { ($0["quality"] as! String) == "hq" }
-        .first
-    let sqFile = transcodings.filter { ($0["quality"] as! String) == "sq" }
-        .first
-    
-    return hqFileProgressive ?? sqFileProgressive ?? hqFile ?? sqFile
-}
-
-extension Track: Decodable {
-
     enum CodingKeys: String, CodingKey {
         case id
         case title
@@ -63,10 +39,11 @@ extension Track: Decodable {
         case user
     }
     
-    public init(from decoder: Decoder) throws {
+    public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        id = try container.decode(Int.self, forKey: .id)
+        let rawID = try container.decode(Int.self, forKey: .id)
+        id = String(rawID)
         title = try container.decode(String.self, forKey: .title)
         description = try container.decodeIfPresent(String.self, forKey: .description)
         artworkURL = try container.decodeIfPresent(URL.self, forKey: .artworkURL)
@@ -89,4 +66,24 @@ extension Track: Decodable {
         user = try container.decode(User.self, forKey: .user)
     }
     
+}
+
+private func audioFile(from transcodings: [[String: Any]]) -> [String: Any]? {
+    func isFormatProgressive(from trasncoding: [String: Any]) -> Bool {
+        guard let formatProtocol = trasncoding["format"] as? [String: String] else { return false }
+        
+        return formatProtocol["protocol"] == "progressive"
+    }
+    
+    let hqFileProgressive = transcodings.filter { ($0["quality"] as! String) == "hq" && isFormatProgressive(from: $0) }
+        .first
+    let sqFileProgressive = transcodings.filter { ($0["quality"] as! String) == "sq" && isFormatProgressive(from: $0) }
+        .first
+
+    let hqFile = transcodings.filter { ($0["quality"] as! String) == "hq" }
+        .first
+    let sqFile = transcodings.filter { ($0["quality"] as! String) == "sq" }
+        .first
+    
+    return hqFileProgressive ?? sqFileProgressive ?? hqFile ?? sqFile
 }

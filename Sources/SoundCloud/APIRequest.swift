@@ -15,29 +15,29 @@ public struct APIRequest<T: Decodable> {
         case albumsAndPlaylists
         case stream
         case whoToFollow
-        case followings(Int)
-        case followers(Int)
+        case followings(String)
+        case followers(String)
         case history
         case search(String)
         
-        case user(Int)
-        case userStream(Int)
+        case user(String)
+        case userStream(String)
         
-        case tracks([Int])
-        case trackLikes(Int)
-        case likeTrack(Int)
-        case unlikeTrack(Int)
-        case repostTrack(Int)
-        case unrepostTrack(Int)
-        case comments(Int)
+        case tracks([String])
+        case trackLikes(String)
+        case likeTrack(String)
+        case unlikeTrack(String)
+        case repostTrack(String)
+        case unrepostTrack(String)
+        case comments(String)
         
-        case playlist(Int)
-//        case playlistLikes(Int)
-        case likePlaylist(Int)
-        case unlikePlaylist(Int)
-        case repostPlaylist(Int)
-        case unrepostPlaylist(Int)
-        case addToPlaylist(Int, [Int])
+        case playlist(String)
+//        case playlistLikes(String)
+        case likePlaylist(String)
+        case unlikePlaylist(String)
+        case repostPlaylist(String)
+        case unrepostPlaylist(String)
+        case addToPlaylist(String, [String])
     }
     
     public static func me() -> APIRequest<User> {
@@ -72,7 +72,7 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<Slice<Some>>(api: .search(query))
     }
     
-    public static func user(with id: Int) -> APIRequest<User> {
+    public static func user(with id: String) -> APIRequest<User> {
         return APIRequest<User>(api: .user(id))
     }
     
@@ -80,7 +80,7 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<Slice<Post>>(api: .userStream(user.id))
     }
     
-    public static func tracks(_ ids: [Int]) -> APIRequest<[Track]> {
+    public static func tracks(_ ids: [String]) -> APIRequest<[Track]> {
         return APIRequest<[Track]>(api: .tracks(ids))
     }
     
@@ -108,7 +108,7 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<Slice<Comment>>(api: .comments(track.id))
     }
     
-    public static func playlist(_ id: Int) -> APIRequest<Playlist> {
+    public static func playlist(_ id: String) -> APIRequest<Playlist> {
         return APIRequest<Playlist>(api: .playlist(id))
     }
     
@@ -120,16 +120,16 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<String>(api: .unlikePlaylist(playlist.id))
     }
     
-    public static func repost(_ playlist: Playlist) -> APIRequest<String> {
+    public static func repost(_ playlist: UserPlaylist) -> APIRequest<String> {
         return APIRequest<String>(api: .repostPlaylist(playlist.id))
     }
     
-    public static func unrepost(_ playlist: Playlist) -> APIRequest<String> {
+    public static func unrepost(_ playlist: UserPlaylist) -> APIRequest<String> {
         return APIRequest<String>(api: .unrepostPlaylist(playlist.id))
     }
     
-    public static func add(to playlist: Playlist, trackIDs: [Int]) -> APIRequest<Playlist> {
-        return APIRequest<Playlist>(api: .addToPlaylist(playlist.id, trackIDs))
+    public static func add(to playlist: UserPlaylist, trackIDs: [String]) -> APIRequest<UserPlaylist> {
+        return APIRequest<UserPlaylist>(api: .addToPlaylist(playlist.id, trackIDs))
     }
     
     public var api: API
@@ -151,14 +151,14 @@ public struct APIRequest<T: Decodable> {
         case .tracks(_): return "tracks"
         case .trackLikes(let id): return "users/\(id)/track_likes"
         case .likeTrack(let trackID): fallthrough
-        case .unlikeTrack(let trackID): return "users/\(SoundCloud.shared.user?.id ?? 0)/track_likes/\(trackID)"
+        case .unlikeTrack(let trackID): return "users/\(SoundCloud.shared.user?.id ?? "")/track_likes/\(trackID)"
         case .repostTrack(let trackID): fallthrough
         case .unrepostTrack(let trackID): return "me/track_reposts/\(trackID)"
         case .comments(let trackID): return "tracks/\(trackID)/comments"
             
         case .playlist(let id): return "playlists/\(id)"
         case .likePlaylist(let playlistID): fallthrough
-        case .unlikePlaylist(let playlistID): return "users/\(SoundCloud.shared.user?.id ?? 0)/playlist_likes/\(playlistID)"
+        case .unlikePlaylist(let playlistID): return "users/\(SoundCloud.shared.user?.id ?? "")/playlist_likes/\(playlistID)"
         case .repostPlaylist(let playlistID): fallthrough
         case .unrepostPlaylist(let playlistID): return "me/playlist_reposts/\(playlistID)"
         case .addToPlaylist(let id, _): return "playlists/\(id)"

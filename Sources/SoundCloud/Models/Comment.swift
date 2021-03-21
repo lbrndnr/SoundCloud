@@ -7,18 +7,14 @@
 
 import Foundation
 
-public struct Comment: SoundCloudIdentifiable {
+public class Comment: SoundCloudIdentifiable, Decodable {
     
-    public var id: Int
+    public var id: String
     public var body: String
     public var date: Date
     public var timestamp: TimeInterval
     public var trackID: Int
     public var user: User
-    
-}
-
-extension Comment: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -29,13 +25,14 @@ extension Comment: Decodable {
         case user
     }
     
-    public init(from decoder: Decoder) throws {
+    public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        id = try container.decode(Int.self, forKey: .id)
+        let rawID = try container.decode(Int.self, forKey: .id)
+        id = String(rawID)
         body = try container.decode(String.self, forKey: .body)
         date = try container.decode(Date.self, forKey: .date)
-        timestamp = try container.decode(TimeInterval.self, forKey: .timestamp)
+        timestamp = try container.decode(TimeInterval.self, forKey: .timestamp)/1000.0
         trackID = try container.decode(Int.self, forKey: .trackID)
         user = try container.decode(User.self, forKey: .user)
     }
