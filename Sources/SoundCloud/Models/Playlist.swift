@@ -58,7 +58,7 @@ public class Playlist: SoundCloudIdentifiable, Decodable {
             }
             catch {
                 if let tracks = try container.decode([Any].self, forKey: .tracks) as? [[String : Any]] {
-                    let ids = tracks.map {"\(String(describing: $0["id"]))" }
+                    let ids = tracks.map {"\(String(describing: $0["id"]!))" }
                     self.trackIDs = ids
                 }
             }
