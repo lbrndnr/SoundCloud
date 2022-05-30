@@ -12,7 +12,7 @@ public struct APIRequest<T: Decodable> {
     
     public enum API {
         case me
-        case albumsAndPlaylists
+        case library
         case stream
         case whoToFollow
         case followings(String)
@@ -44,8 +44,8 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<User>(api: .me)
     }
     
-    public static func albumsAndPlaylists() -> APIRequest<Slice<Like<Playlist>>> {
-        return APIRequest<Slice<Like<Playlist>>>(api: .albumsAndPlaylists)
+    public static func library() -> APIRequest<Slice<Like<Playlist>>> {
+        return APIRequest<Slice<Like<Playlist>>>(api: .library)
     }
     
     public static func stream() -> APIRequest<Slice<Post>> {
@@ -137,7 +137,7 @@ public struct APIRequest<T: Decodable> {
     var path: String {
         switch api {
         case .me: return "me"
-        case .albumsAndPlaylists: return "me/library/albums_playlists_and_system_playlists"
+        case .library: return "me/library/all"
         case .stream: return "stream"
         case .whoToFollow: return "me/suggested/users/who_to_follow"
         case .followings(let id): return "users/\(id)/followings"
