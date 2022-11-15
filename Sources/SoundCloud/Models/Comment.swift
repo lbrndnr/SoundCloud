@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Comment: SoundCloudIdentifiable, Decodable {
+public struct Comment: SoundCloudIdentifiable, Decodable {
     
     public var id: String
     public var body: String
@@ -25,7 +25,7 @@ public class Comment: SoundCloudIdentifiable, Decodable {
         case user
     }
     
-    public required init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         let rawID = try container.decode(Int.self, forKey: .id)

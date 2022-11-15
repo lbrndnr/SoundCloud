@@ -8,7 +8,7 @@
 
 import Foundation
 
-public class Post: SoundCloudIdentifiable, Decodable {
+public struct Post: SoundCloudIdentifiable, Decodable {
     
     public enum Kind {
         case track(Track)
@@ -74,7 +74,7 @@ public class Post: SoundCloudIdentifiable, Decodable {
         case user
     }
     
-    public required init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(String.self, forKey: .id)
         date = try container.decode(Date.self, forKey: .date)

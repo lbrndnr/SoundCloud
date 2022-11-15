@@ -7,14 +7,16 @@
 //
 
 import Foundation
+import Combine
 
-public class Track: SoundCloudIdentifiable, Decodable {
+public struct Track: SoundCloudIdentifiable, Decodable {
     
     public var id: String
     public var title: String
     public var description: String?
     public var artworkURL: URL?
     public var waveformURL: URL
+    public var waveform: Waveform?
     public var streamURL: URL?
     public var permalinkURL: URL
     public var duration: Float
@@ -39,7 +41,7 @@ public class Track: SoundCloudIdentifiable, Decodable {
         case user
     }
     
-    public required init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         let rawID = try container.decode(Int.self, forKey: .id)

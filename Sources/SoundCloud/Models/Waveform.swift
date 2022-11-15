@@ -7,27 +7,37 @@
 
 import Foundation
 
-public class Waveform: Decodable {
+public struct Waveform: Decodable {
     
-    public var width: Int
-    public var height: Int
+    public var width: Int {
+        return samples.count
+    }
+    public var minHeight: Int {
+        return samples.min() ?? 0
+    }
+    public var maxHeight: Int {
+        return samples.max() ?? 0
+    }
     public var samples: [Int]
     
-    public init(width: Int, height: Int, samples: [Int]) {
-        self.width = width
-        self.height = height
+    public init(samples: [Int]) {
         self.samples = samples
     }
     
-    public convenience init(width: Int, height: Int, repeatedSample: Int) {
-        let samples = Array(repeating: repeatedSample, count: width)
-        self.init(width: width, height: height, samples: samples)
+    enum CodingKeys: String, CodingKey {
+        case samples
     }
     
-    enum CodingKeys: String, CodingKey {
-        case width
-        case height
-        case samples
+}
+
+extension Waveform: Equatable {
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(samples.hashValue)
+    }
+    
+    public static func ==(lhs: Waveform, rhs: Waveform) -> Bool {
+        return lhs.samples == rhs.samples
     }
     
 }

@@ -18,8 +18,8 @@ public struct ResourceRequest<T: Decodable> {
         case audioFile(URL)
     }
     
-    public static func waveform(of track: Track) -> ResourceRequest<Waveform> {
-        return ResourceRequest<Waveform>(resource: .waveform(track.waveformURL))
+    public static func waveform(_ url: URL) -> ResourceRequest<Waveform> {
+        return ResourceRequest<Waveform>(resource: .waveform(url))
     }
     
     public static func audioFile(_ url: URL) -> ResourceRequest<URL> {

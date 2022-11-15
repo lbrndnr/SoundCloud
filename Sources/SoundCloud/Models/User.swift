@@ -10,7 +10,7 @@ import Foundation
 
 public struct NoUserError: Error { }
 
-public class User: SoundCloudIdentifiable, Encodable, Decodable {
+public struct User: SoundCloudIdentifiable, Encodable, Decodable {
     
     public var id: String
     public var username: String
@@ -51,7 +51,7 @@ public class User: SoundCloudIdentifiable, Encodable, Decodable {
         self.avatarURL = avatarURL
     }
     
-    public required init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         let rawID = try container.decode(Int.self, forKey: .id)

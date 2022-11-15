@@ -100,6 +100,13 @@ public class SoundCloud {
     private func get<T: Decodable>(_ request: URLRequest) -> AnyPublisher<T, Error> {
         return URLSession.shared.dataTaskPublisher(for: request)
             .map { $0.data }
+//            .map { data in
+//                let payload = try! JSONSerialization.jsonObject(with: data) as! [AnyHashable: Any]
+//                if let col = payload["collection"] as? [Any] {
+//                    print(request.url, col.count)
+//                }
+//                return data
+//            }
             .decode(type: T.self, decoder: decoder)
             .eraseToAnyPublisher()
     }

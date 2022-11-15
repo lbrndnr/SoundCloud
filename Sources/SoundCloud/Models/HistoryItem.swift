@@ -8,7 +8,7 @@
 
 import Foundation
 
-public class HistoryItem: SoundCloudIdentifiable, Decodable {
+public struct HistoryItem: SoundCloudIdentifiable, Decodable {
     
     public var id: String {
         return track.id
@@ -22,7 +22,7 @@ public class HistoryItem: SoundCloudIdentifiable, Decodable {
         case track
     }
     
-    public required init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let timestamp = try container.decode(Double.self, forKey: .date)
         date = Date(timeIntervalSince1970: timestamp)

@@ -8,7 +8,7 @@
 
 import Foundation
 
-public class Like<T: SoundCloudIdentifiable & Decodable>: SoundCloudIdentifiable, Decodable {
+public struct Like<T: SoundCloudIdentifiable & Decodable>: SoundCloudIdentifiable, Decodable {
     
     public var id: String {
         return item.id
@@ -24,7 +24,7 @@ public class Like<T: SoundCloudIdentifiable & Decodable>: SoundCloudIdentifiable
         case systemPlaylist = "system_playlist"
     }
     
-    public required init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         date = try container.decode(Date.self, forKey: .date)
