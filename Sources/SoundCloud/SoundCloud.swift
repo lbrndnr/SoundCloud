@@ -92,6 +92,10 @@ public class SoundCloud {
                 .eraseToAnyPublisher()
         }
         
+        return get(next: next, limit: limit)
+    }
+    
+    public func get<T: Decodable>(next: URL, limit: Int = 16) -> AnyPublisher<Slice<T>, Error> {
         let queryItems = [URLQueryItem(name: "limit", value: String(min(limit, 150)))]
         let request = authorized(next, queryItems: queryItems)
         return get(request)
@@ -100,13 +104,6 @@ public class SoundCloud {
     private func get<T: Decodable>(_ request: URLRequest) -> AnyPublisher<T, Error> {
         return URLSession.shared.dataTaskPublisher(for: request)
             .map { $0.data }
-//            .map { data in
-//                let payload = try! JSONSerialization.jsonObject(with: data) as! [AnyHashable: Any]
-//                if let col = payload["collection"] as? [Any] {
-//                    print(request.url, col.count)
-//                }
-//                return data
-//            }
             .decode(type: T.self, decoder: decoder)
             .eraseToAnyPublisher()
     }
