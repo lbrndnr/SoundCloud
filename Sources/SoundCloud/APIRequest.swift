@@ -167,6 +167,8 @@ public struct APIRequest<T: Decodable> {
     
     var queryParameters: [String: String]? {
         switch api {
+        case .stream: return ["limit": "20"]
+        case .trackLikes(_): return ["limit": "20"]
         case .tracks(let ids): return ["ids": ids.map { String($0) }.joined(separator: ",")]
         case .search(let query): return ["q": query]
         case .comments(_): return ["client_id": "D7YkmhAjzaV0qsA9e71yKXufTMyJAX2Q", "filter_replies": "0", "threaded": "1"]

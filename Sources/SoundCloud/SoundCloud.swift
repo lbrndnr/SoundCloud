@@ -76,7 +76,7 @@ public class SoundCloud {
         return get(authorized(request))
     }
     
-    public func get<T: Decodable>(_ request: APIRequest<Slice<T>>, limit: Int? = 16) -> AnyPublisher<Slice<T>, Error> {
+    public func get<T: Decodable>(_ request: APIRequest<Slice<T>>, limit: Int? = 20) -> AnyPublisher<Slice<T>, Error> {
         if request.needsUserID && user == nil {
             return Fail(error: NoUserError())
                 .eraseToAnyPublisher()
@@ -86,7 +86,7 @@ public class SoundCloud {
         return get(authorized(request, queryItems: queryItems ?? []))
     }
     
-    public func get<T: Decodable>(next slice: Slice<T>, limit: Int = 16) -> AnyPublisher<Slice<T>, Error> {
+    public func get<T: Decodable>(next slice: Slice<T>, limit: Int = 20) -> AnyPublisher<Slice<T>, Error> {
         guard let next = slice.next else {
             return Fail(error: NoNextSliceError())
                 .eraseToAnyPublisher()
