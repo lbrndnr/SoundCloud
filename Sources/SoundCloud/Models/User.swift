@@ -40,6 +40,7 @@ public struct User: SoundCloudIdentifiable, Encodable, Decodable {
         case followerCount = "followers_count"
         case followingCount = "followings_count"
         case avatarURL = "avatar_url"
+        case playlists = "playlists"
     }
     
     public init(id: String, username: String, firstName: String, lastName: String, avatarURL: URL) {
@@ -54,8 +55,15 @@ public struct User: SoundCloudIdentifiable, Encodable, Decodable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        let rawID = try container.decode(Int.self, forKey: .id)
-        id = String(rawID)
+        // SoundCloud's API uses Int, Nuage uses String
+        do {
+            let rawID = try container.decode(Int.self, forKey: .id)
+            id = String(rawID)
+        }
+        catch {
+            id = try container.decode(String.self, forKey: .id)
+        }
+        
         username = try container.decode(String.self, forKey: .username)
         firstName = try container.decode(String.self, forKey: .firstName)
         lastName = try container.decode(String.self, forKey: .lastName)
@@ -66,6 +74,7 @@ public struct User: SoundCloudIdentifiable, Encodable, Decodable {
         followerCount = try container.decodeIfPresent(Int.self, forKey: .followerCount)
         followingCount = try container.decodeIfPresent(Int.self, forKey: .followingCount)
         avatarURL = try container.decode(URL.self, forKey: .avatarURL)
+        playlists = try container.decodeIfPresent([Playlist].self, forKey: .playlists)
     }
     
     

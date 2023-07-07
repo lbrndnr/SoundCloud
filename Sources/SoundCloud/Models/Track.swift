@@ -9,7 +9,7 @@
 import Foundation
 import Combine
 
-public struct Track: SoundCloudIdentifiable, Decodable {
+public struct Track: SoundCloudIdentifiable, Encodable, Decodable {
     
     public var id: String
     public var title: String
@@ -32,8 +32,11 @@ public struct Track: SoundCloudIdentifiable, Decodable {
         case description
         case artworkURL = "artwork_url"
         case waveformURL = "waveform_url"
+        case waveform
+        case streamURL = "stream_url"
         case permalinkURL = "permalink_url"
         case media
+        case duration
         case playbackCount = "playback_count"
         case likeCount = "likes_count"
         case repostCount = "reposts_count"
@@ -66,6 +69,25 @@ public struct Track: SoundCloudIdentifiable, Decodable {
         repostCount = try container.decodeIfPresent(Int.self, forKey: .repostCount) ?? 0
         date = try container.decode(Date.self, forKey: .date)
         user = try container.decode(User.self, forKey: .user)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encodeIfPresent(description, forKey: .description)
+        try container.encodeIfPresent(artworkURL, forKey: .artworkURL)
+        try container.encode(waveformURL, forKey: .waveformURL)
+        try container.encodeIfPresent(waveform, forKey: .waveform)
+        try container.encode(streamURL, forKey: .streamURL)
+        try container.encode(permalinkURL, forKey: .permalinkURL)
+        try container.encode(duration, forKey: .duration)
+        try container.encode(playbackCount, forKey: .playbackCount)
+        try container.encode(likeCount, forKey: .likeCount)
+        try container.encode(repostCount, forKey: .repostCount)
+        try container.encode(date, forKey: .date)
+        try container.encode(user, forKey: .user)
     }
     
 }

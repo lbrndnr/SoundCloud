@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Playlist: SoundCloudIdentifiable, Decodable {
+public class Playlist: SoundCloudIdentifiable, Encodable, Decodable {
     
     public var id: String
     public var title: String
@@ -63,6 +63,18 @@ public class Playlist: SoundCloudIdentifiable, Decodable {
                 }
             }
         }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encodeIfPresent(description, forKey: .description)
+        try container.encodeIfPresent(artworkURL, forKey: .artworkURL)
+        try container.encode(permalinkURL, forKey: .permalinkURL)
+        try container.encode(isPublic, forKey: .isPublic)
+        try container.encode(user, forKey: .user)
     }
     
 }
