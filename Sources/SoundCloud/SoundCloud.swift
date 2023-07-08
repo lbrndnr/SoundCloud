@@ -67,6 +67,33 @@ public class SoundCloud {
     
     // MARK: - Requests
     
+    public func get<T: Decodable>(all request: APIRequest<Slice<T>>) -> AnyPublisher<[T], Error> {
+        if request.needsUserID && user == nil {
+            return Fail(error: NoUserError())
+                .eraseToAnyPublisher()
+        }
+        
+        let queryItems = [URLQueryItem(name: "limit", value: "150")]
+        let request = authorized(request, queryItems: queryItems)
+        let subject = CurrentValueSubject<URLRequest, Error>(request)
+        
+        let getRequest: (URLRequest) -> AnyPublisher<Slice<T>, Error> = self.get
+        
+        return subject
+            .flatMap(getRequest)
+            .handleEvents(receiveOutput: { slice in
+                if let next = slice.next {
+                    let request = self.authorized(next, queryItems: queryItems)
+                    subject.send(request)
+                }
+                else {
+                    subject.send(completion: .finished)
+                }
+            })
+            .reduce([T]()) { $0 + $1.collection }
+            .eraseToAnyPublisher()
+    }
+    
     public func get<T: Decodable>(_ request: APIRequest<T>) -> AnyPublisher<T, Error> {
         if request.needsUserID && user == nil {
             return Fail(error: NoUserError())
@@ -95,7 +122,7 @@ public class SoundCloud {
         return get(next: next, limit: limit)
     }
     
-    public func get<T: Decodable>(next: URL, limit: Int = 16) -> AnyPublisher<Slice<T>, Error> {
+    public func get<T: Decodable>(next: URL, limit: Int = 20) -> AnyPublisher<Slice<T>, Error> {
         let queryItems = [URLQueryItem(name: "limit", value: String(min(limit, 150)))]
         let request = authorized(next, queryItems: queryItems)
         return get(request)
