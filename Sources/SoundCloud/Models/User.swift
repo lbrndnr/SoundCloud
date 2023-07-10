@@ -30,7 +30,7 @@ public struct User: SoundCloudIdentifiable, Encodable, Decodable {
 
     enum CodingKeys: String, CodingKey {
         case id
-        case username = "permalink"
+        case username
         case firstName = "first_name"
         case lastName = "last_name"
         case name = "full_name"
