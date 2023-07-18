@@ -91,7 +91,9 @@ public struct UserPlaylist: Playlist {
         try container.encode(secretToken, forKey: .secretToken)
         try container.encode(date, forKey: .date)
         
-        try container.encode(tracks, forKey: .tracks)
+        if let tracks = tracks {
+            try container.encode(tracks, forKey: .tracks)
+        }
     }
     
 }

@@ -81,6 +81,10 @@ public struct SystemPlaylist: Playlist {
         try container.encode(user, forKey: .user)
         
         try container.encode(madeForUser, forKey: .madeForUser)
+        
+        if let tracks = tracks {
+            try container.encode(tracks, forKey: .tracks)
+        }
     }
     
 }
