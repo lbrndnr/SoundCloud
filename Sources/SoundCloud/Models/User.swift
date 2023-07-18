@@ -26,7 +26,7 @@ public struct User: SoundCloudIdentifiable, Encodable, Decodable {
     public var followingCount: Int?
     public var avatarURL: URL
     
-    public var playlists: [Playlist]?
+    public var playlists: [AnyPlaylist]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -74,8 +74,28 @@ public struct User: SoundCloudIdentifiable, Encodable, Decodable {
         followerCount = try container.decodeIfPresent(Int.self, forKey: .followerCount)
         followingCount = try container.decodeIfPresent(Int.self, forKey: .followingCount)
         avatarURL = try container.decode(URL.self, forKey: .avatarURL)
-        playlists = try container.decodeIfPresent([Playlist].self, forKey: .playlists)
+        
+        playlists = try container.decodeIfPresent([AnyPlaylist].self, forKey: .playlists)
     }
     
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(id, forKey: .id)
+        try container.encode(username, forKey: .username)
+        try container.encode(firstName, forKey: .firstName)
+        try container.encode(lastName, forKey: .lastName)
+        try container.encode(name, forKey: .name)
+        try container.encodeIfPresent(description, forKey: .description)
+        
+        try container.encodeIfPresent(city, forKey: .city)
+        try container.encodeIfPresent(countryCode, forKey: .countryCode)
+        
+        try container.encodeIfPresent(followerCount, forKey: .followerCount)
+        try container.encodeIfPresent(followingCount, forKey: .followingCount)
+        try container.encode(avatarURL, forKey: .avatarURL)
+        
+        try container.encode(playlists, forKey: .playlists)
+    }
     
 }

@@ -44,8 +44,8 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<User>(api: .me)
     }
     
-    public static func library() -> APIRequest<Slice<Like<Playlist>>> {
-        return APIRequest<Slice<Like<Playlist>>>(api: .library)
+    public static func library() -> APIRequest<Slice<Like<AnyPlaylist>>> {
+        return APIRequest<Slice<Like<AnyPlaylist>>>(api: .library)
     }
     
     public static func stream() -> APIRequest<Slice<Post>> {
@@ -108,15 +108,15 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<Slice<Comment>>(api: .comments(track.id))
     }
     
-    public static func playlist(_ id: String) -> APIRequest<Playlist> {
-        return APIRequest<Playlist>(api: .playlist(id))
+    public static func playlist(_ id: String) -> APIRequest<AnyPlaylist> {
+        return APIRequest<AnyPlaylist>(api: .playlist(id))
     }
     
-    public static func like(_ playlist: Playlist) -> APIRequest<String> {
+    public static func like<T: Playlist>(_ playlist: T) -> APIRequest<String> {
         return APIRequest<String>(api: .likePlaylist(playlist.id))
     }
     
-    public static func unlike(_ playlist: Playlist) -> APIRequest<String> {
+    public static func unlike<T: Playlist>(_ playlist: T) -> APIRequest<String> {
         return APIRequest<String>(api: .unlikePlaylist(playlist.id))
     }
     

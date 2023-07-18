@@ -11,7 +11,7 @@ import Combine
 
 public struct AuthenticationError: Error {}
 
-public class SoundCloud {
+public class SoundCloud: ObservableObject {
     
     public static var shared = SoundCloud()
     

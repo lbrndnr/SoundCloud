@@ -7,74 +7,81 @@
 
 import Foundation
 
-public class Playlist: SoundCloudIdentifiable, Encodable, Decodable {
+public protocol Playlist: SoundCloudIdentifiable, Encodable, Decodable {
     
-    public var id: String
-    public var title: String
-    public var description: String?
-    public var artworkURL: URL?
-    public var permalinkURL: URL
-    public var isPublic: Bool
-    public var user: User
+    var id: String { get }
+    var title: String { get }
+    var description: String? { get }
+    var artworkURL: URL? { get }
+    var permalinkURL: URL { get }
+    var isPublic: Bool { get }
+    var user: User { get }
     
     /// For some requests, 5 full tracks are sent along.
     /// Their ids are a prefix of `trackIDs`
-    public var tracks: [Track]?
-    public var trackIDs: [String]?
+    var tracks: [Track]? { get }
+    var trackIDs: [String]? { get }
+    
+}
 
-    enum CodingKeys: String, CodingKey {
-        case id
-        case title
-        case description
-        case artworkURL = "artwork_url"
-        case permalinkURL = "permalink_url"
-        case isPublic = "public"
-        case isPublic2 = "is_public"
-        case tracks
-        case user
+public enum AnyPlaylist: Playlist {
+    case user(UserPlaylist)
+    case system(SystemPlaylist)
+    
+    private var playlist: any Playlist {
+        switch self {
+        case .user(let playlist): return playlist
+        case .system(let playlist): return playlist
+        }
     }
     
-    public required init(from decoder: Decoder) throws {
+    public var userPlaylist: UserPlaylist? {
+        switch self {
+        case .user(let playlist): return playlist
+        default: return nil
+        }
+    }
+    
+    public var systemPlaylist: SystemPlaylist? {
+        switch self {
+        case .system(let playlist): return playlist
+        default: return nil
+        }
+    }
+    
+    public var id: String { return playlist.id }
+    public var title: String { return playlist.title }
+    public var description: String? { return playlist.description }
+    public var artworkURL: URL? { return playlist.artworkURL }
+    public var permalinkURL: URL { return playlist.permalinkURL }
+    public var isPublic: Bool { return playlist.isPublic }
+    public var user: User { return playlist.user }
+    
+    /// For some requests, 5 full tracks are sent along.
+    /// Their ids are a prefix of `trackIDs`
+    public var tracks: [Track]? { return playlist.tracks }
+    public var trackIDs: [String]? { return playlist.trackIDs }
+    
+    private enum CodingKeys: String, CodingKey {
+        case userPlaylist = "playlist"
+        case systemPlaylist = "system_playlist"
+    }
+    
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let intID = try? container.decode(Int.self, forKey: .id)
-        let stringID = try? container.decode(String.self, forKey: .id)
-        id = (intID.map(String.init) ?? stringID)!
-        title = try container.decode(String.self, forKey: .title)
-        description = try container.decodeIfPresent(String.self, forKey: .description)
-        artworkURL = try container.decodeIfPresent(URL.self, forKey: .artworkURL)
-        permalinkURL = try container.decode(URL.self, forKey: .permalinkURL)
-        
-        let rawIsPublic = try? container.decode(Bool.self, forKey: .isPublic)
-        let rawIsPublic2 = try? container.decode(Bool.self, forKey: .isPublic2)
-        isPublic = (rawIsPublic ?? rawIsPublic2)!
-        
-        user = try container.decode(User.self, forKey: .user)
-        
-        if container.contains(.tracks) {
-            do {
-                let tracks = try container.decode([Track].self, forKey: .tracks)
-                self.tracks = tracks
-                self.trackIDs = tracks.map { $0.id }
-            }
-            catch {
-                if let tracks = try container.decode([Any].self, forKey: .tracks) as? [[String : Any]] {
-                    let ids = tracks.map {"\(String(describing: $0["id"]!))" }
-                    self.trackIDs = ids
-                }
-            }
+        if container.codingPath.last?.stringValue == CodingKeys.systemPlaylist.stringValue {
+            self = .system(try SystemPlaylist(from: decoder))
+        }
+        else if container.codingPath.last?.stringValue == CodingKeys.userPlaylist.stringValue {
+            self = .user(try UserPlaylist(from: decoder))
+        }
+        else {
+            throw DecodingError.typeMismatch(AnyPlaylist.self, DecodingError.Context.init(codingPath: container.codingPath, debugDescription: "Unknown playlist type", underlyingError: nil))
         }
     }
     
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        
-        try container.encode(id, forKey: .id)
-        try container.encode(title, forKey: .title)
-        try container.encodeIfPresent(description, forKey: .description)
-        try container.encodeIfPresent(artworkURL, forKey: .artworkURL)
-        try container.encode(permalinkURL, forKey: .permalinkURL)
-        try container.encode(isPublic, forKey: .isPublic)
-        try container.encode(user, forKey: .user)
+        try playlist.encode(to: encoder)
     }
     
 }
