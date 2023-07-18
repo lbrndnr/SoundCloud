@@ -37,7 +37,7 @@ public struct APIRequest<T: Decodable> {
         case unlikePlaylist(String)
         case repostPlaylist(String)
         case unrepostPlaylist(String)
-        case addToPlaylist(String, [String])
+        case setPlaylistTracks(String, [Int])
     }
     
     public static func me() -> APIRequest<User> {
@@ -128,8 +128,8 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<String>(api: .unrepostPlaylist(playlist.id))
     }
     
-    public static func add(to playlist: UserPlaylist, trackIDs: [String]) -> APIRequest<UserPlaylist> {
-        return APIRequest<UserPlaylist>(api: .addToPlaylist(playlist.id, trackIDs))
+    public static func set(_ playlist: UserPlaylist, trackIDs: [Int]) -> APIRequest<UserPlaylist> {
+        return APIRequest<UserPlaylist>(api: .setPlaylistTracks(playlist.id, trackIDs))
     }
     
     public var api: API
@@ -161,7 +161,7 @@ public struct APIRequest<T: Decodable> {
         case .unlikePlaylist(let playlistID): return "users/\(SoundCloud.shared.user?.id ?? "")/playlist_likes/\(playlistID)"
         case .repostPlaylist(let playlistID): fallthrough
         case .unrepostPlaylist(let playlistID): return "me/playlist_reposts/\(playlistID)"
-        case .addToPlaylist(let id, _): return "playlists/\(id)"
+        case .setPlaylistTracks(let id, _): return "playlists/\(id)"
         }
     }
     
@@ -184,22 +184,19 @@ public struct APIRequest<T: Decodable> {
         case .unlikePlaylist(_): return "DELETE"
         case .repostPlaylist(_): return "PUT"
         case .unrepostPlaylist(_): return "DELETE"
-        case .addToPlaylist(_, _): return "PUT"
+        case .setPlaylistTracks(_, _): return "PUT"
         default: return "GET"
         }
     }
     
-    var body: Data? {
+    var jsonBody: [String: Any]? {
         switch api {
-        case .addToPlaylist(_, let trackIDs):
-            let tracks = ["tracks": trackIDs]
-            let payload = ["playlist": tracks]
-            do {
-                return try JSONSerialization.data(withJSONObject: payload, options: .fragmentsAllowed)
-            }
-            catch {
-                return nil
-            }
+        case .setPlaylistTracks(_, let trackIDs):
+            return [
+                "playlist": [
+                    "tracks": trackIDs
+                ]
+            ]
         default: return nil
         }
     }

@@ -50,6 +50,11 @@ public class SoundCloud: ObservableObject {
         
         var req = authorized(url, queryItems: items)
         req.httpMethod = request.httpMethod
+        
+        if let body = request.jsonBody {
+            req.httpBody = try! JSONSerialization.data(withJSONObject: body)
+        }
+        
         return req
     }
     

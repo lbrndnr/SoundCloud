@@ -63,20 +63,29 @@ public enum AnyPlaylist: Playlist {
     public var trackIDs: [String]? { return playlist.trackIDs }
     
     private enum CodingKeys: String, CodingKey {
+        case kind
         case userPlaylist = "playlist"
-        case systemPlaylist = "system_playlist"
     }
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        if container.codingPath.last?.stringValue == CodingKeys.systemPlaylist.stringValue {
-            self = .system(try SystemPlaylist(from: decoder))
+        
+        var isUserPlaylist = false
+        if let kind = try? container.decodeIfPresent(String.self, forKey: .kind) {
+            isUserPlaylist = (kind == "playlist")
         }
-        else if container.codingPath.last?.stringValue == CodingKeys.userPlaylist.stringValue {
+        else if let lastCodingPath = container.codingPath.last {
+            isUserPlaylist = (lastCodingPath.stringValue == CodingKeys.userPlaylist.stringValue)
+        }
+        else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: container.codingPath + [CodingKeys.kind], debugDescription: "Could not resolve playlist type."))
+        }
+        
+        if isUserPlaylist {
             self = .user(try UserPlaylist(from: decoder))
         }
         else {
-            throw DecodingError.typeMismatch(AnyPlaylist.self, DecodingError.Context.init(codingPath: container.codingPath, debugDescription: "Unknown playlist type", underlyingError: nil))
+            self = .system(try SystemPlaylist(from: decoder))
         }
     }
     

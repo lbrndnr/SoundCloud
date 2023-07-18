@@ -90,6 +90,8 @@ public struct UserPlaylist: Playlist {
         try container.encode(isAlbum, forKey: .isAlbum)
         try container.encode(secretToken, forKey: .secretToken)
         try container.encode(date, forKey: .date)
+        
+        try container.encode(tracks, forKey: .tracks)
     }
     
 }
