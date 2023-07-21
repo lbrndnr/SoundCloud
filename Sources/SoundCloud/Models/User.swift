@@ -25,8 +25,6 @@ public struct User: SoundCloudIdentifiable, Encodable, Decodable {
     public var followerCount: Int?
     public var followingCount: Int?
     public var avatarURL: URL
-    
-    public var playlists: [AnyPlaylist]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -40,7 +38,6 @@ public struct User: SoundCloudIdentifiable, Encodable, Decodable {
         case followerCount = "followers_count"
         case followingCount = "followings_count"
         case avatarURL = "avatar_url"
-        case playlists = "playlists"
     }
     
     public init(id: String, username: String, firstName: String, lastName: String, avatarURL: URL) {
@@ -74,8 +71,6 @@ public struct User: SoundCloudIdentifiable, Encodable, Decodable {
         followerCount = try container.decodeIfPresent(Int.self, forKey: .followerCount)
         followingCount = try container.decodeIfPresent(Int.self, forKey: .followingCount)
         avatarURL = try container.decode(URL.self, forKey: .avatarURL)
-        
-        playlists = try container.decodeIfPresent([AnyPlaylist].self, forKey: .playlists)
     }
     
 }
