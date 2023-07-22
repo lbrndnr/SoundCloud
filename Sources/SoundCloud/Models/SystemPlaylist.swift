@@ -87,4 +87,8 @@ public struct SystemPlaylist: Playlist {
         }
     }
     
+    public func eraseToAnyPlaylist() -> AnyPlaylist {
+        return .system(self)
+    }
+    
 }

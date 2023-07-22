@@ -96,4 +96,8 @@ public struct UserPlaylist: Playlist {
         }
     }
     
+    public func eraseToAnyPlaylist() -> AnyPlaylist {
+        return .user(self)
+    }
+    
 }

@@ -22,6 +22,8 @@ public protocol Playlist: SoundCloudIdentifiable, Encodable, Decodable {
     var tracks: [Track]? { get }
     var trackIDs: [String]? { get }
     
+    func eraseToAnyPlaylist() -> AnyPlaylist
+    
 }
 
 public enum AnyPlaylist: Playlist {
@@ -91,6 +93,10 @@ public enum AnyPlaylist: Playlist {
     
     public func encode(to encoder: Encoder) throws {
         try playlist.encode(to: encoder)
+    }
+    
+    public func eraseToAnyPlaylist() -> AnyPlaylist {
+        return self
     }
     
 }
