@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct Post: SoundCloudIdentifiable, Decodable {
+public struct Post: SoundCloudIdentifiable, Encodable, Decodable {
     
     public enum Kind {
         case track(Track)
@@ -51,6 +51,14 @@ public struct Post: SoundCloudIdentifiable, Decodable {
         case .trackRepost(let track): return [track]
         case .playlist(let playlist): fallthrough
         case .playlistRepost(let playlist): return playlist.tracks ?? []
+        }
+    }
+    
+    public var playlist: UserPlaylist? {
+        switch kind {
+        case .playlist(let playlist): return playlist
+        case .playlistRepost(let playlist): return playlist
+        default: return nil
         }
     }
     
@@ -97,6 +105,31 @@ public struct Post: SoundCloudIdentifiable, Decodable {
             kind = .playlistRepost(playlist)
         default:
             throw UndefinedPostTypeError(type: type)
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(id, forKey: .id)
+        try container.encode(date, forKey: .date)
+        try container.encode(caption, forKey: .caption)
+        try container.encode(caption, forKey: .caption)
+        try container.encode(user, forKey: .user)
+        
+        switch kind {
+        case .track(let track):
+            try container.encode("track", forKey: .type)
+            try container.encode(track, forKey: .track)
+        case .trackRepost(let track):
+            try container.encode("track-repost", forKey: .type)
+            try container.encode(track, forKey: .track)
+        case .playlist(let playlist):
+            try container.encode("playlist", forKey: .type)
+            try container.encode(playlist, forKey: .playlist)
+        case .playlistRepost(let playlist):
+            try container.encode("playlist-repost", forKey: .type)
+            try container.encode(playlist, forKey: .playlist)
         }
     }
     
