@@ -19,6 +19,7 @@ public struct APIRequest<T: Decodable> {
         case followers(String)
         case history
         case search(String)
+        case resolve(URL)
         
         case user(String)
         case userStream(String)
@@ -70,6 +71,10 @@ public struct APIRequest<T: Decodable> {
     
     public static func search(_ query: String) -> APIRequest<Slice<Some>> {
         return APIRequest<Slice<Some>>(api: .search(query))
+    }
+    
+    public static func resolve(_ url: URL) -> APIRequest<Some> {
+        return APIRequest<Some>(api: .resolve(url))
     }
     
     public static func user(with id: String) -> APIRequest<User> {
@@ -144,6 +149,7 @@ public struct APIRequest<T: Decodable> {
         case .followers(let id): return "users/\(id)/followers"
         case .history: return "me/play-history/tracks"
         case .search(_): return "search"
+        case .resolve(_): return "resolve"
             
         case .user(let id): return "users/\(id)"
         case .userStream(let id): return "stream/users/\(id)"
@@ -169,6 +175,7 @@ public struct APIRequest<T: Decodable> {
         switch api {
         case .tracks(let ids): return ["ids": ids.map { String($0) }.joined(separator: ",")]
         case .search(let query): return ["q": query]
+        case .resolve(let url): return ["url": url.absoluteString]
         case .comments(_): return ["client_id": "D7YkmhAjzaV0qsA9e71yKXufTMyJAX2Q", "filter_replies": "0", "threaded": "1"]
         default: return nil
         }
