@@ -8,6 +8,13 @@
 
 import Foundation
 
+public enum Filter: String {
+    case users
+    case tracks
+    case albums
+    case playlists
+}
+
 public struct APIRequest<T: Decodable> {
     
     public enum API {
@@ -18,7 +25,7 @@ public struct APIRequest<T: Decodable> {
         case followings(String)
         case followers(String)
         case history
-        case search(String)
+        case search(String, Filter?)
         case resolve(URL)
         
         case user(String)
@@ -69,8 +76,8 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<Slice<HistoryItem>>(api: .history)
     }
     
-    public static func search(_ query: String) -> APIRequest<Slice<Some>> {
-        return APIRequest<Slice<Some>>(api: .search(query))
+    public static func search(_ query: String, filter: Filter? = nil) -> APIRequest<Slice<Some>> {
+        return APIRequest<Slice<Some>>(api: .search(query, filter))
     }
     
     public static func resolve(_ url: URL) -> APIRequest<Some> {
@@ -148,7 +155,11 @@ public struct APIRequest<T: Decodable> {
         case .followings(let id): return "users/\(id)/followings"
         case .followers(let id): return "users/\(id)/followers"
         case .history: return "me/play-history/tracks"
-        case .search(_): return "search"
+        case .search(_, let filter):
+            if let filter = filter {
+                return "search/\(filter)"
+            }
+            return "search"
         case .resolve(_): return "resolve"
             
         case .user(let id): return "users/\(id)"
@@ -174,7 +185,7 @@ public struct APIRequest<T: Decodable> {
     var queryParameters: [String: String]? {
         switch api {
         case .tracks(let ids): return ["ids": ids.map { String($0) }.joined(separator: ",")]
-        case .search(let query): return ["q": query]
+        case .search(let query, _): return ["q": query]
         case .resolve(let url): return ["url": url.absoluteString]
         case .comments(_): return ["client_id": "D7YkmhAjzaV0qsA9e71yKXufTMyJAX2Q", "filter_replies": "0", "threaded": "1"]
         default: return nil

@@ -16,7 +16,6 @@ public struct Track: SoundCloudIdentifiable, Encodable, Decodable {
     public var description: String?
     public var artworkURL: URL?
     public var waveformURL: URL
-    public var waveform: Waveform?
     public var streamURL: URL?
     public var permalinkURL: URL
     public var duration: Float
@@ -32,7 +31,6 @@ public struct Track: SoundCloudIdentifiable, Encodable, Decodable {
         case description
         case artworkURL = "artwork_url"
         case waveformURL = "waveform_url"
-        case waveform
         case streamURL = "stream_url"
         case permalinkURL = "permalink_url"
         case media
@@ -79,7 +77,6 @@ public struct Track: SoundCloudIdentifiable, Encodable, Decodable {
         try container.encodeIfPresent(description, forKey: .description)
         try container.encodeIfPresent(artworkURL, forKey: .artworkURL)
         try container.encode(waveformURL, forKey: .waveformURL)
-        try container.encodeIfPresent(waveform, forKey: .waveform)
         try container.encode(streamURL, forKey: .streamURL)
         try container.encode(permalinkURL, forKey: .permalinkURL)
         try container.encode(duration, forKey: .duration)
