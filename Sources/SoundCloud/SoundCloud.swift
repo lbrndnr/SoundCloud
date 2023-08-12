@@ -72,7 +72,7 @@ public class SoundCloud: ObservableObject {
     
     // MARK: - Requests
     
-    public func get<T: Decodable>(all request: APIRequest<Slice<T>>) -> AnyPublisher<[T], Error> {
+    public func get<T: Decodable>(all request: APIRequest<Page<T>>) -> AnyPublisher<[T], Error> {
         if request.needsUserID && user == nil {
             return Fail(error: NoUserError())
                 .eraseToAnyPublisher()
@@ -82,12 +82,12 @@ public class SoundCloud: ObservableObject {
         let request = authorized(request, queryItems: queryItems)
         let subject = CurrentValueSubject<URLRequest, Error>(request)
         
-        let getRequest: (URLRequest) -> AnyPublisher<Slice<T>, Error> = self.get
+        let getRequest: (URLRequest) -> AnyPublisher<Page<T>, Error> = self.get
         
         return subject
             .flatMap(getRequest)
-            .handleEvents(receiveOutput: { slice in
-                if let next = slice.next {
+            .handleEvents(receiveOutput: { page in
+                if let next = page.next {
                     let request = self.authorized(next, queryItems: queryItems)
                     subject.send(request)
                 }
@@ -108,7 +108,7 @@ public class SoundCloud: ObservableObject {
         return get(authorized(request))
     }
     
-    public func get<T: Decodable>(_ request: APIRequest<Slice<T>>, count: Int) -> AnyPublisher<Slice<T>, Error> {
+    public func get<T: Decodable>(_ request: APIRequest<Page<T>>, count: Int) -> AnyPublisher<Page<T>, Error> {
         if request.needsUserID && user == nil {
             return Fail(error: NoUserError())
                 .eraseToAnyPublisher()
@@ -118,15 +118,15 @@ public class SoundCloud: ObservableObject {
         let request = authorized(request, queryItems: queryItems)
         let subject = CurrentValueSubject<URLRequest, Error>(request)
         
-        let getRequest: (URLRequest) -> AnyPublisher<Slice<T>, Error> = self.get
+        let getRequest: (URLRequest) -> AnyPublisher<Page<T>, Error> = self.get
         var currentCount = 0
         
         return subject
             .flatMap(getRequest)
-            .handleEvents(receiveOutput: { slice in
-                currentCount += slice.collection.count
+            .handleEvents(receiveOutput: { page in
+                currentCount += page.collection.count
                 
-                if let next = slice.next, currentCount < count {
+                if let next = page.next, currentCount < count {
                     let request = self.authorized(next, queryItems: queryItems)
                     print("get next")
                     subject.send(request)
@@ -136,16 +136,16 @@ public class SoundCloud: ObservableObject {
                 }
             })
             .collect()
-            .tryMap { slices in
-                guard var newSlice = slices.last else { return Slice(collection: []) }
-                newSlice.collection = slices.reduce([]) { $0 + $1.collection }
+            .tryMap { pages in
+                guard var newPage = pages.last else { return Page(collection: []) }
+                newPage.collection = pages.reduce([]) { $0 + $1.collection }
                 
-                return newSlice
+                return newPage
             }
             .eraseToAnyPublisher()
     }
     
-    public func get<T: Decodable>(_ request: APIRequest<Slice<T>>, limit: Int? = 20) -> AnyPublisher<Slice<T>, Error> {
+    public func get<T: Decodable>(_ request: APIRequest<Page<T>>, limit: Int? = 20) -> AnyPublisher<Page<T>, Error> {
         if request.needsUserID && user == nil {
             return Fail(error: NoUserError())
                 .eraseToAnyPublisher()
@@ -155,16 +155,16 @@ public class SoundCloud: ObservableObject {
         return get(authorized(request, queryItems: queryItems ?? []))
     }
     
-    public func get<T: Decodable>(next slice: Slice<T>, limit: Int = 20) -> AnyPublisher<Slice<T>, Error> {
-        guard let next = slice.next else {
-            return Fail(error: NoNextSliceError())
+    public func get<T: Decodable>(next page: Page<T>, limit: Int = 20) -> AnyPublisher<Page<T>, Error> {
+        guard let next = page.next else {
+            return Fail(error: NoNextPageError())
                 .eraseToAnyPublisher()
         }
         
         return get(next: next, limit: limit)
     }
     
-    public func get<T: Decodable>(next: URL, limit: Int = 20) -> AnyPublisher<Slice<T>, Error> {
+    public func get<T: Decodable>(next: URL, limit: Int = 20) -> AnyPublisher<Page<T>, Error> {
         let queryItems = [URLQueryItem(name: "limit", value: String(min(limit, 150)))]
         let request = authorized(next, queryItems: queryItems)
         return get(request)

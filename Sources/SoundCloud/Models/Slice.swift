@@ -1,5 +1,5 @@
 //
-//  Slice.swift
+//  Page.swift
 //  Nuage
 //
 //  Created by Laurin Brandner on 26.12.19.
@@ -9,9 +9,9 @@
 import Foundation
 import Combine
 
-public struct NoNextSliceError: Error { }
+public struct NoNextPageError: Error { }
 
-public struct Slice<T: Decodable>: Decodable {
+public struct Page<T: Decodable>: Decodable {
     
     public var collection: [T]
     public var next: URL?

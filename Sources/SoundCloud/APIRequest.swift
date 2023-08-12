@@ -52,32 +52,32 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<User>(api: .me)
     }
     
-    public static func library() -> APIRequest<Slice<Like<AnyPlaylist>>> {
-        return APIRequest<Slice<Like<AnyPlaylist>>>(api: .library)
+    public static func library() -> APIRequest<Page<Like<AnyPlaylist>>> {
+        return APIRequest<Page<Like<AnyPlaylist>>>(api: .library)
     }
     
-    public static func stream() -> APIRequest<Slice<Post>> {
-        return APIRequest<Slice<Post>>(api: .stream)
+    public static func stream() -> APIRequest<Page<Post>> {
+        return APIRequest<Page<Post>>(api: .stream)
     }
     
-    public static func whoToFollow() -> APIRequest<Slice<Recommendation>> {
-        return APIRequest<Slice<Recommendation>>(api: .whoToFollow)
+    public static func whoToFollow() -> APIRequest<Page<Recommendation>> {
+        return APIRequest<Page<Recommendation>>(api: .whoToFollow)
     }
     
-    public static func followings(of user: User) -> APIRequest<Slice<User>> {
-        return APIRequest<Slice<User>>(api: .followings(user.id))
+    public static func followings(of user: User) -> APIRequest<Page<User>> {
+        return APIRequest<Page<User>>(api: .followings(user.id))
     }
     
-    public static func followers(of user: User) -> APIRequest<Slice<User>> {
-        return APIRequest<Slice<User>>(api: .followers(user.id))
+    public static func followers(of user: User) -> APIRequest<Page<User>> {
+        return APIRequest<Page<User>>(api: .followers(user.id))
     }
     
-    public static func history() -> APIRequest<Slice<HistoryItem>> {
-        return APIRequest<Slice<HistoryItem>>(api: .history)
+    public static func history() -> APIRequest<Page<HistoryItem>> {
+        return APIRequest<Page<HistoryItem>>(api: .history)
     }
     
-    public static func search(_ query: String, filter: Filter? = nil) -> APIRequest<Slice<Some>> {
-        return APIRequest<Slice<Some>>(api: .search(query, filter))
+    public static func search(_ query: String, filter: Filter? = nil) -> APIRequest<Page<Some>> {
+        return APIRequest<Page<Some>>(api: .search(query, filter))
     }
     
     public static func resolve(_ url: URL) -> APIRequest<Some> {
@@ -88,16 +88,16 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<User>(api: .user(id))
     }
     
-    public static func stream(of user: User) -> APIRequest<Slice<Post>> {
-        return APIRequest<Slice<Post>>(api: .userStream(user.id))
+    public static func stream(of user: User) -> APIRequest<Page<Post>> {
+        return APIRequest<Page<Post>>(api: .userStream(user.id))
     }
     
     public static func tracks(_ ids: [String]) -> APIRequest<[Track]> {
         return APIRequest<[Track]>(api: .tracks(ids))
     }
     
-    public static func trackLikes(of user: User) -> APIRequest<Slice<Like<Track>>> {
-        return APIRequest<Slice<Like<Track>>>(api: .trackLikes(user.id))
+    public static func trackLikes(of user: User) -> APIRequest<Page<Like<Track>>> {
+        return APIRequest<Page<Like<Track>>>(api: .trackLikes(user.id))
     }
     
     public static func like(_ track: Track) -> APIRequest<String> {
@@ -116,8 +116,8 @@ public struct APIRequest<T: Decodable> {
         return APIRequest<String>(api: .unrepostTrack(track.id))
     }
     
-    public static func comments(of track: Track) -> APIRequest<Slice<Comment>> {
-        return APIRequest<Slice<Comment>>(api: .comments(track.id))
+    public static func comments(of track: Track) -> APIRequest<Page<Comment>> {
+        return APIRequest<Page<Comment>>(api: .comments(track.id))
     }
     
     public static func playlist(_ id: String) -> APIRequest<AnyPlaylist> {
