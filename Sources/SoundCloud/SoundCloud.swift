@@ -108,6 +108,43 @@ public class SoundCloud: ObservableObject {
         return get(authorized(request))
     }
     
+    public func get<T: Decodable>(_ request: APIRequest<Slice<T>>, count: Int) -> AnyPublisher<Slice<T>, Error> {
+        if request.needsUserID && user == nil {
+            return Fail(error: NoUserError())
+                .eraseToAnyPublisher()
+        }
+        
+        let queryItems = [URLQueryItem(name: "limit", value: "150")]
+        let request = authorized(request, queryItems: queryItems)
+        let subject = CurrentValueSubject<URLRequest, Error>(request)
+        
+        let getRequest: (URLRequest) -> AnyPublisher<Slice<T>, Error> = self.get
+        var currentCount = 0
+        
+        return subject
+            .flatMap(getRequest)
+            .handleEvents(receiveOutput: { slice in
+                currentCount += slice.collection.count
+                
+                if let next = slice.next, currentCount < count {
+                    let request = self.authorized(next, queryItems: queryItems)
+                    print("get next")
+                    subject.send(request)
+                }
+                else {
+                    subject.send(completion: .finished)
+                }
+            })
+            .collect()
+            .tryMap { slices in
+                guard var newSlice = slices.last else { return Slice(collection: []) }
+                newSlice.collection = slices.reduce([]) { $0 + $1.collection }
+                
+                return newSlice
+            }
+            .eraseToAnyPublisher()
+    }
+    
     public func get<T: Decodable>(_ request: APIRequest<Slice<T>>, limit: Int? = 20) -> AnyPublisher<Slice<T>, Error> {
         if request.needsUserID && user == nil {
             return Fail(error: NoUserError())
