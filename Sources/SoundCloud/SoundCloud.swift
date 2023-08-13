@@ -194,7 +194,7 @@ public class SoundCloud: ObservableObject {
             .eraseToAnyPublisher()
     }
     
-    public func perform(_ request: APIRequest<String>) -> AnyPublisher<(), Error> {
+    public func perform<T>(_ request: APIRequest<T>) -> AnyPublisher<(), Error> {
         return URLSession.shared.dataTaskPublisher(for: authorized(request))
             .map { _ in () }
             .mapError { $0 as Error }

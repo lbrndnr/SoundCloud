@@ -15,7 +15,7 @@ public enum Filter: String {
     case playlists
 }
 
-public struct APIRequest<T: Decodable> {
+public struct APIRequest<T> {
     
     public enum API {
         case me
@@ -24,12 +24,14 @@ public struct APIRequest<T: Decodable> {
         case whoToFollow
         case followings(String)
         case followers(String)
-        case history
         case search(String, Filter?)
         case resolve(URL)
         
         case user(String)
         case userStream(String)
+        
+        case history
+        case addToHistory(String)
         
         case tracks([String])
         case trackLikes(String)
@@ -123,6 +125,10 @@ public struct APIRequest<T: Decodable> {
     public static func playlist(_ id: String) -> APIRequest<AnyPlaylist> {
         return APIRequest<AnyPlaylist>(api: .playlist(id))
     }
+
+    public static func addToHistory(_ track: Track) -> APIRequest<()> {
+        return APIRequest<()>(api: .addToHistory(track.urn))
+    }
     
     public static func like<T: Playlist>(_ playlist: T) -> APIRequest<String> {
         return APIRequest<String>(api: .likePlaylist(playlist.id))
@@ -154,13 +160,15 @@ public struct APIRequest<T: Decodable> {
         case .whoToFollow: return "me/suggested/users/who_to_follow"
         case .followings(let id): return "users/\(id)/followings"
         case .followers(let id): return "users/\(id)/followers"
-        case .history: return "me/play-history/tracks"
         case .search(_, let filter):
             if let filter = filter {
                 return "search/\(filter)"
             }
             return "search"
         case .resolve(_): return "resolve"
+            
+        case .history: return "me/play-history/tracks"
+        case .addToHistory(_): return "me/play-history"
             
         case .user(let id): return "users/\(id)"
         case .userStream(let id): return "stream/users/\(id)"
@@ -194,6 +202,7 @@ public struct APIRequest<T: Decodable> {
     
     var httpMethod: String {
         switch api {
+        case .addToHistory(_): return "POST"
         case .likeTrack(_): return "PUT"
         case .unlikeTrack(_): return "DELETE"
         case .repostTrack(_): return "PUT"
@@ -209,6 +218,7 @@ public struct APIRequest<T: Decodable> {
     
     var jsonBody: [String: Any]? {
         switch api {
+        case .addToHistory(let urn): return ["track_urn": urn]
         case .setPlaylistTracks(_, let trackIDs):
             return [
                 "playlist": [
@@ -221,9 +231,10 @@ public struct APIRequest<T: Decodable> {
     
     var needsUserID: Bool {
         switch api {
-        case .likeTrack(_): fallthrough
+        case .addToHistory(_): return true
+        case .likeTrack(_): return true
         case .unlikeTrack(_): return true
-        case .likePlaylist(_): fallthrough
+        case .likePlaylist(_): return true
         case .unlikePlaylist(_): return true
         default: return false
         }

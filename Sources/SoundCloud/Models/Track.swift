@@ -12,6 +12,7 @@ import Combine
 public struct Track: SoundCloudIdentifiable, Encodable, Decodable {
     
     public var id: String
+    public var urn: String { "soundcloud:tracks:\(id)" }
     public var title: String
     public var description: String?
     public var artworkURL: URL?
