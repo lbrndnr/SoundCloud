@@ -10,6 +10,7 @@ import Foundation
 public struct SystemPlaylist: Playlist {
     
     public var id: String
+    public var urn: String
     public var title: String
     public var description: String?
     public var artworkURL: URL?
@@ -24,6 +25,7 @@ public struct SystemPlaylist: Playlist {
     
     enum CodingKeys: String, CodingKey {
         case id
+        case urn
         case title
         case description
         case artworkURL = "artwork_url"
@@ -41,6 +43,7 @@ public struct SystemPlaylist: Playlist {
         let intID = try? container.decode(Int.self, forKey: .id)
         let stringID = try? container.decode(String.self, forKey: .id)
         id = (intID.map(String.init) ?? stringID)!
+        urn = try container.decode(String.self, forKey: .urn)
         title = try container.decode(String.self, forKey: .title)
         description = try container.decodeIfPresent(String.self, forKey: .description)
         artworkURL = try container.decodeIfPresent(URL.self, forKey: .artworkURL)
@@ -73,6 +76,7 @@ public struct SystemPlaylist: Playlist {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
         try container.encode(id, forKey: .id)
+        try container.encode(urn, forKey: .urn)
         try container.encode(title, forKey: .title)
         try container.encodeIfPresent(description, forKey: .description)
         try container.encodeIfPresent(artworkURL, forKey: .artworkURL)

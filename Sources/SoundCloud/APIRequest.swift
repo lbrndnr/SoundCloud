@@ -41,7 +41,8 @@ public struct APIRequest<T> {
         case unrepostTrack(String)
         case comments(String)
         
-        case playlist(String)
+        case userPlaylist(String)
+        case systemPlaylist(String)
 //        case playlistLikes(String)
         case likePlaylist(String)
         case unlikePlaylist(String)
@@ -122,8 +123,12 @@ public struct APIRequest<T> {
         return APIRequest<Page<Comment>>(api: .comments(track.id))
     }
     
-    public static func playlist(_ id: String) -> APIRequest<AnyPlaylist> {
-        return APIRequest<AnyPlaylist>(api: .playlist(id))
+    public static func userPlaylist(_ id: String) -> APIRequest<UserPlaylist> {
+        return APIRequest<UserPlaylist>(api: .userPlaylist(id))
+    }
+    
+    public static func systemPlaylist(_ urn: String) -> APIRequest<SystemPlaylist> {
+        return APIRequest<SystemPlaylist>(api: .systemPlaylist(urn))
     }
 
     public static func addToHistory(_ track: Track) -> APIRequest<()> {
@@ -181,7 +186,8 @@ public struct APIRequest<T> {
         case .unrepostTrack(let trackID): return "me/track_reposts/\(trackID)"
         case .comments(let trackID): return "tracks/\(trackID)/comments"
             
-        case .playlist(let id): return "playlists/\(id)"
+        case .userPlaylist(let id): return "playlists/\(id)"
+        case .systemPlaylist(let urn): return "system-playlists/\(urn)"
         case .likePlaylist(let playlistID): fallthrough
         case .unlikePlaylist(let playlistID): return "users/\(SoundCloud.shared.user?.id ?? "")/playlist_likes/\(playlistID)"
         case .repostPlaylist(let playlistID): fallthrough
