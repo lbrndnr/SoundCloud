@@ -49,6 +49,9 @@ public struct APIRequest<T> {
         case repostPlaylist(String)
         case unrepostPlaylist(String)
         case setPlaylistTracks(String, [Int])
+        
+        case trackStation(String)
+        case artistStation(String)
     }
     
     public static func me() -> APIRequest<User> {
@@ -155,6 +158,14 @@ public struct APIRequest<T> {
         return APIRequest<UserPlaylist>(api: .setPlaylistTracks(playlist.id, trackIDs))
     }
     
+    public static func trackStation(basedOn track: Track) -> APIRequest<SystemPlaylist> {
+        return APIRequest<SystemPlaylist>(api: .trackStation(track.id))
+    }
+    
+    public static func artistStation(basedOn user: User) -> APIRequest<SystemPlaylist> {
+        return APIRequest<SystemPlaylist>(api: .artistStation(user.id))
+    }
+    
     public var api: API
     
     var path: String {
@@ -193,6 +204,9 @@ public struct APIRequest<T> {
         case .repostPlaylist(let playlistID): fallthrough
         case .unrepostPlaylist(let playlistID): return "me/playlist_reposts/\(playlistID)"
         case .setPlaylistTracks(let id, _): return "playlists/\(id)"
+            
+        case .trackStation(let id): return "system-playlists/soundcloud:system-playlists:track-stations:\(id)"
+        case .artistStation(let id): return "system-playlists/soundcloud:system-playlists:artist-stations:\(id)"
         }
     }
     
