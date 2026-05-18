@@ -29,6 +29,7 @@ public struct SystemPlaylist: Playlist {
         case title
         case description
         case artworkURL = "artwork_url"
+        case calculatedArtworkURL = "calculated_artwork_url"
         case permalinkURL = "permalink_url"
         case isPublic = "public"
         case isPublic2 = "is_public"
@@ -47,6 +48,7 @@ public struct SystemPlaylist: Playlist {
         title = try container.decode(String.self, forKey: .title)
         description = try container.decodeIfPresent(String.self, forKey: .description)
         artworkURL = try container.decodeIfPresent(URL.self, forKey: .artworkURL)
+            ?? container.decodeIfPresent(URL.self, forKey: .calculatedArtworkURL)
         permalinkURL = try container.decode(URL.self, forKey: .permalinkURL)
         
         let rawIsPublic = try? container.decode(Bool.self, forKey: .isPublic)

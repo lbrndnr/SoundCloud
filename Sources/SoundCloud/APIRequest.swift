@@ -21,6 +21,7 @@ public struct APIRequest<T> {
         case me
         case library
         case stream
+        case mixedSelections
         case whoToFollow
         case followings(String)
         case followers(String)
@@ -64,6 +65,10 @@ public struct APIRequest<T> {
     
     public static func stream() -> APIRequest<Page<Post>> {
         return APIRequest<Page<Post>>(api: .stream)
+    }
+
+    public static func mixedSelections() -> APIRequest<Page<Selection>> {
+        return APIRequest<Page<Selection>>(api: .mixedSelections)
     }
     
     public static func whoToFollow() -> APIRequest<Page<Recommendation>> {
@@ -173,6 +178,7 @@ public struct APIRequest<T> {
         case .me: return "me"
         case .library: return "me/library/all"
         case .stream: return "stream"
+        case .mixedSelections: return "mixed-selections"
         case .whoToFollow: return "me/suggested/users/who_to_follow"
         case .followings(let id): return "users/\(id)/followings"
         case .followers(let id): return "users/\(id)/followers"
