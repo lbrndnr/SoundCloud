@@ -10,14 +10,14 @@ import Foundation
 
 public struct Post: SoundCloudIdentifiable, Encodable, Decodable {
     
-    public enum Kind {
+    public enum Kind: Sendable {
         case track(Track)
         case trackRepost(Track)
         case playlist(UserPlaylist)
         case playlistRepost(UserPlaylist)
     }
     
-    public enum Item {
+    public enum Item: Sendable {
         case track(Track)
         case playlist(UserPlaylist)
     }

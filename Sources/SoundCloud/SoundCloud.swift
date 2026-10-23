@@ -7,212 +7,198 @@
 //
 
 import Foundation
-import Combine
+import Observation
 
 public struct AuthenticationError: Error {}
 
 public struct HTTPError: Error {
-    
+
     public var statusCode: Int
-    
+
 }
 
-public class SoundCloud: ObservableObject {
-    
-    public static var shared = SoundCloud()
-    
-    @Published public var user: User?
+/// The entry point for requests to SoundCloud's private API v2.
+///
+/// Requests fail with an `AuthenticationError` when there is no access token,
+/// with a `NoUserError` when they need the logged in user before it's loaded
+/// and with an `HTTPError` on non-2xx responses.
+@MainActor
+@Observable
+public final class SoundCloud {
+
+    public static let shared = SoundCloud()
+
+    /// The logged in user. It's loaded whenever `accessToken` is set.
+    public var user: User?
+
     public var accessToken: String? {
         didSet {
-            get(.me())
-                .receive(on: RunLoop.main)
-                .map { Optional($0) }
-                .replaceError(with: user)
-                .filter { $0 != nil }
-                .assign(to: \.user, on: self)
-                .store(in: &subscriptions)
+            reloadUser()
         }
     }
-    
-    private var decoder: JSONDecoder
-    private var subscriptions = Set<AnyCancellable>()
-    
-    init() {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
-        
-        decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .formatted(formatter)
+
+    @ObservationIgnored private var userTask: Task<Void, Never>?
+
+    init() {}
+
+    private func reloadUser() {
+        userTask?.cancel()
+        guard accessToken != nil else {
+            userTask = nil
+            return
+        }
+
+        userTask = Task {
+            do {
+                user = try await get(.me())
+            }
+            catch {
+                // Keep the current user, e.g. the one restored from disk
+                guard !Task.isCancelled else { return }
+                print("Failed to load the user: \(error)")
+            }
+        }
     }
-    
-    // MARK: - Authentication
-    
-    private func authorized<T>(_ request: APIRequest<T>, queryItems: [URLQueryItem] = []) -> URLRequest {
-        let url = URL(string: "https://api-v2.soundcloud.com/\(request.path)")!
+
+    // MARK: - Requests
+
+    public func get<T: Decodable & Sendable>(_ request: APIRequest<T>) async throws -> T {
+        return try await Self.decoded(authorized(request))
+    }
+
+    public func get<T: Decodable & Sendable>(_ request: APIRequest<Page<T>>, limit: Int? = 20) async throws -> Page<T> {
+        let queryItems = limit.map { [URLQueryItem(name: "limit", value: String(min($0, 150)))] }
+        return try await Self.decoded(authorized(request, queryItems: queryItems ?? []))
+    }
+
+    /// Loads pages until at least `count` elements are loaded or there are no more pages.
+    /// The returned page contains all loaded elements and points to the page after the last loaded one.
+    public func get<T: Decodable & Sendable>(_ request: APIRequest<Page<T>>, count: Int) async throws -> Page<T> {
+        let queryItems = [URLQueryItem(name: "limit", value: "150")]
+        var page: Page<T> = try await Self.decoded(authorized(request, queryItems: queryItems))
+        var collection = page.collection
+
+        while collection.count < count, let next = page.next {
+            page = try await Self.decoded(authorized(next, queryItems: queryItems))
+            collection += page.collection
+        }
+
+        page.collection = collection
+        return page
+    }
+
+    /// Loads all pages and returns their elements.
+    public func get<T: Decodable & Sendable>(all request: APIRequest<Page<T>>) async throws -> [T] {
+        let queryItems = [URLQueryItem(name: "limit", value: "150")]
+        var page: Page<T> = try await Self.decoded(authorized(request, queryItems: queryItems))
+        var collection = page.collection
+
+        while let next = page.next {
+            page = try await Self.decoded(authorized(next, queryItems: queryItems))
+            collection += page.collection
+        }
+
+        return collection
+    }
+
+    public func get<T: Decodable & Sendable>(next page: Page<T>, limit: Int = 20) async throws -> Page<T> {
+        guard let next = page.next else { throw NoNextPageError() }
+
+        return try await get(next: next, limit: limit)
+    }
+
+    public func get<T: Decodable & Sendable>(next: URL, limit: Int = 20) async throws -> Page<T> {
+        let queryItems = [URLQueryItem(name: "limit", value: String(min(limit, 150)))]
+        return try await Self.decoded(authorized(next, queryItems: queryItems))
+    }
+
+    public func get<T: Decodable & Sendable>(_ request: ResourceRequest<T>) async throws -> T {
+        let urlRequest = try request.needsAuthorization ? authorized(request.url) : URLRequest(url: request.url)
+        return try await Self.decoded(urlRequest, using: request)
+    }
+
+    /// Performs a request whose response body isn't needed, e.g. liking a track.
+    public func perform<T>(_ request: APIRequest<T>) async throws {
+        _ = try await Self.data(for: authorized(request))
+    }
+
+    // MARK: - Authorization
+
+    func authorized<T>(_ request: APIRequest<T>, queryItems: [URLQueryItem] = []) throws -> URLRequest {
+        if request.needsUserID && user == nil {
+            throw NoUserError()
+        }
+
+        let url = URL(string: "https://api-v2.soundcloud.com/\(request.path(userID: user?.id))")!
         var items = queryItems
         if let parameters = request.queryParameters {
-            items += zip(parameters.keys, parameters.values).map { URLQueryItem(name: $0.0, value: $0.1)}
+            items += parameters.map { URLQueryItem(name: $0.key, value: $0.value) }
         }
-        
-        var req = authorized(url, queryItems: items)
+
+        var req = try authorized(url, queryItems: items)
         req.httpMethod = request.httpMethod
-        
+
         if let body = request.jsonBody {
-            req.httpBody = try! JSONSerialization.data(withJSONObject: body)
+            req.httpBody = try JSONSerialization.data(withJSONObject: body)
         }
-        
+
         return req
     }
-    
-    private func authorized(_ url: URL, queryItems: [URLQueryItem] = []) -> URLRequest {
-        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
-        let authItems = [URLQueryItem(name: "oauth_token", value: accessToken!)]
-        
-        let explicitItems = authItems + queryItems
+
+    func authorized(_ url: URL, queryItems: [URLQueryItem] = []) throws -> URLRequest {
+        guard let accessToken = accessToken else { throw AuthenticationError() }
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            throw URLError(.badURL)
+        }
+
+        let explicitItems = [URLQueryItem(name: "oauth_token", value: accessToken)] + queryItems
         let explicitKeys = explicitItems.map { $0.name }
         let urlItems = components.queryItems?.filter { !explicitKeys.contains($0.name) }
         components.queryItems = (urlItems ?? []) + explicitItems
-        
-        return URLRequest(url: components.url!)
+
+        guard let authorizedURL = components.url else { throw URLError(.badURL) }
+        return URLRequest(url: authorizedURL)
     }
-    
-    // MARK: - Requests
-    
-    public func get<T: Decodable>(all request: APIRequest<Page<T>>) -> AnyPublisher<[T], Error> {
-        if request.needsUserID && user == nil {
-            return Fail(error: NoUserError())
-                .eraseToAnyPublisher()
-        }
-        
-        let queryItems = [URLQueryItem(name: "limit", value: "150")]
-        let request = authorized(request, queryItems: queryItems)
-        let subject = CurrentValueSubject<URLRequest, Error>(request)
-        
-        let getRequest: (URLRequest) -> AnyPublisher<Page<T>, Error> = self.get
-        
-        return subject
-            .flatMap(getRequest)
-            .handleEvents(receiveOutput: { page in
-                if let next = page.next {
-                    let request = self.authorized(next, queryItems: queryItems)
-                    subject.send(request)
-                }
-                else {
-                    subject.send(completion: .finished)
-                }
-            })
-            .reduce([T]()) { $0 + $1.collection }
-            .eraseToAnyPublisher()
+
+    // MARK: - Loading
+
+    // These are nonisolated, so that loading and decoding happens off the main actor.
+
+    nonisolated private static func decoded<T: Decodable & Sendable>(_ request: URLRequest) async throws -> T {
+        let data = try await data(for: request)
+        return try makeDecoder().decode(T.self, from: data)
     }
-    
-    public func get<T: Decodable>(_ request: APIRequest<T>) -> AnyPublisher<T, Error> {
-        if request.needsUserID && user == nil {
-            return Fail(error: NoUserError())
-                .eraseToAnyPublisher()
-        }
-        
-        return get(authorized(request))
-    }
-    
-    public func get<T: Decodable>(_ request: APIRequest<Page<T>>, count: Int) -> AnyPublisher<Page<T>, Error> {
-        if request.needsUserID && user == nil {
-            return Fail(error: NoUserError())
-                .eraseToAnyPublisher()
-        }
-        
-        let queryItems = [URLQueryItem(name: "limit", value: "150")]
-        let request = authorized(request, queryItems: queryItems)
-        let subject = CurrentValueSubject<URLRequest, Error>(request)
-        
-        let getRequest: (URLRequest) -> AnyPublisher<Page<T>, Error> = self.get
-        var currentCount = 0
-        
-        return subject
-            .flatMap(getRequest)
-            .handleEvents(receiveOutput: { page in
-                currentCount += page.collection.count
-                
-                if let next = page.next, currentCount < count {
-                    let request = self.authorized(next, queryItems: queryItems)
-                    print("get next")
-                    subject.send(request)
-                }
-                else {
-                    subject.send(completion: .finished)
-                }
-            })
-            .collect()
-            .tryMap { pages in
-                guard var newPage = pages.last else { return Page(collection: []) }
-                newPage.collection = pages.reduce([]) { $0 + $1.collection }
-                
-                return newPage
+
+    nonisolated private static func decoded<T: Decodable & Sendable>(_ request: URLRequest, using resource: ResourceRequest<T>) async throws -> T {
+        let data = try await data(for: request)
+
+        if let resourceDecoder = resource.decoder {
+            guard let payload = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [AnyHashable: Any] else {
+                throw ParseError()
             }
-            .eraseToAnyPublisher()
-    }
-    
-    public func get<T: Decodable>(_ request: APIRequest<Page<T>>, limit: Int? = 20) -> AnyPublisher<Page<T>, Error> {
-        if request.needsUserID && user == nil {
-            return Fail(error: NoUserError())
-                .eraseToAnyPublisher()
+            return try resourceDecoder(payload)
         }
-        
-        let queryItems = limit.map { [URLQueryItem(name: "limit", value: String(min($0, 150)))] }
-        return get(authorized(request, queryItems: queryItems ?? []))
+
+        return try makeDecoder().decode(T.self, from: data)
     }
-    
-    public func get<T: Decodable>(next page: Page<T>, limit: Int = 20) -> AnyPublisher<Page<T>, Error> {
-        guard let next = page.next else {
-            return Fail(error: NoNextPageError())
-                .eraseToAnyPublisher()
+
+    nonisolated private static func data(for request: URLRequest) async throws -> Data {
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let response = response as? HTTPURLResponse, !(200..<300).contains(response.statusCode) {
+            throw HTTPError(statusCode: response.statusCode)
         }
-        
-        return get(next: next, limit: limit)
+
+        return data
     }
-    
-    public func get<T: Decodable>(next: URL, limit: Int = 20) -> AnyPublisher<Page<T>, Error> {
-        let queryItems = [URLQueryItem(name: "limit", value: String(min(limit, 150)))]
-        let request = authorized(next, queryItems: queryItems)
-        return get(request)
+
+    nonisolated private static func makeDecoder() -> JSONDecoder {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .formatted(formatter)
+
+        return decoder
     }
-    
-    private func get<T: Decodable>(_ request: URLRequest) -> AnyPublisher<T, Error> {
-        return URLSession.shared.dataTaskPublisher(for: request)
-            .map { $0.data }
-            .decode(type: T.self, decoder: decoder)
-            .eraseToAnyPublisher()
-    }
-    
-    public func get<T: Decodable>(_ request: ResourceRequest<T>) -> AnyPublisher<T, Error> {
-        let req = request.needsAuthorization ? authorized(request.url) : URLRequest(url: request.url)
-        let publisher = URLSession.shared.dataTaskPublisher(for: req)
-        
-        if let decoder = request.decoder {
-            return publisher.tryMap { data, _ in
-                let payload = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [AnyHashable: Any]
-                return try decoder(payload)
-            }.eraseToAnyPublisher()
-        }
-            
-        return publisher
-            .map { $0.data }
-            .decode(type: T.self, decoder: decoder)
-            .eraseToAnyPublisher()
-    }
-    
-    public func perform<T>(_ request: APIRequest<T>) -> AnyPublisher<(), Error> {
-        if request.needsUserID && user == nil {
-            return Fail(error: NoUserError())
-                .eraseToAnyPublisher()
-        }
-        
-        return URLSession.shared.dataTaskPublisher(for: authorized(request))
-            .tryMap { _, response in
-                if let response = response as? HTTPURLResponse, !(200..<300).contains(response.statusCode) {
-                    throw HTTPError(statusCode: response.statusCode)
-                }
-            }
-            .eraseToAnyPublisher()
-    }
-    
+
 }

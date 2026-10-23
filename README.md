@@ -9,35 +9,36 @@
 
 ## Usage
 
-You can login using the following request:
+`SoundCloud` doesn't handle the login itself. Once you have an OAuth token (e.g. from the `oauth_token` cookie after signing in on soundcloud.com), set it on the shared instance. This also loads the logged in user:
 ```swift
-@State private var subscriptions = Set<AnyCancellable>()
-
-SoundCloud.login(username: username, password: password)
-    .receive(on: RunLoop.main)
-    .sink(receiveCompletion: { completion in
-}, receiveValue: { accessToken in
-    print("Logged in with access token: \(accessToken)")
-})
-.store(in: &subscriptions)
+SoundCloud.shared.accessToken = accessToken
 ```
 
-Note that it's currently not possible to login using Google accounts that have been granted access to SoundCloud.
-A typical request to fetch recommendations on whom to follow can be implemented as follows: 
+`SoundCloud` is `@Observable`, so SwiftUI views reading `SoundCloud.shared.user` update once the user is loaded.
+
+Requests are `async` and throw on failure. A typical request to fetch recommendations on whom to follow can be implemented as follows:
 ```swift
 @State private var users = [User]()
-@State private var subscriptions = Set<AnyCancellable>()
 
-SoundCloud.shared.get(.whoToFollow())
-    .map { $0.collection }
-    .replaceError(with: [])
-    .receive(on: RunLoop.main)
-    .map { $0.map { $0.user } }
-    .assign(to: \.users, on: self)
-    .store(in: &subscriptions)
+var body: some View {
+    List(users) { user in
+        Text(user.username)
+    }
+    .task {
+        do {
+            users = try await SoundCloud.shared.get(.whoToFollow()).collection.map { $0.user }
+        }
+        catch {
+            print("Failed to load recommendations: \(error)")
+        }
+    }
+}
 ```
+
+Paginated requests return a `Page`, use `get(next:)` to load the following one, or `get(all:)` to load all elements at once.
+
 ## Requirements
-`SoundCloud` is built using Swift 5 and Combine.
+`SoundCloud` requires Swift 5.9, macOS 14 or iOS 17.
 
 ## Author
 I'm Laurin Brandner, I'm on [Twitter](https://twitter.com/lbrndnr).

@@ -143,11 +143,11 @@ public struct APIRequest<T> {
         return APIRequest<()>(api: .addToHistory(track.urn))
     }
     
-    public static func like<T: Playlist>(_ playlist: T) -> APIRequest<String> {
+    public static func like<P: Playlist>(_ playlist: P) -> APIRequest<String> {
         return APIRequest<String>(api: .likePlaylist(playlist.id))
     }
     
-    public static func unlike<T: Playlist>(_ playlist: T) -> APIRequest<String> {
+    public static func unlike<P: Playlist>(_ playlist: P) -> APIRequest<String> {
         return APIRequest<String>(api: .unlikePlaylist(playlist.id))
     }
     
@@ -173,7 +173,8 @@ public struct APIRequest<T> {
     
     public var api: API
     
-    var path: String {
+    /// `userID` is the id of the logged in user, some endpoints need it.
+    func path(userID: String?) -> String {
         switch api {
         case .me: return "me"
         case .library: return "me/library/all"
@@ -198,7 +199,7 @@ public struct APIRequest<T> {
         case .tracks(_): return "tracks"
         case .trackLikes(let id): return "users/\(id)/track_likes"
         case .likeTrack(let trackID): fallthrough
-        case .unlikeTrack(let trackID): return "users/\(SoundCloud.shared.user?.id ?? "")/track_likes/\(trackID)"
+        case .unlikeTrack(let trackID): return "users/\(userID ?? "")/track_likes/\(trackID)"
         case .repostTrack(let trackID): fallthrough
         case .unrepostTrack(let trackID): return "me/track_reposts/\(trackID)"
         case .comments(let trackID): return "tracks/\(trackID)/comments"
@@ -206,7 +207,7 @@ public struct APIRequest<T> {
         case .userPlaylist(let id): return "playlists/\(id)"
         case .systemPlaylist(let urn): return "system-playlists/\(urn)"
         case .likePlaylist(let playlistID): fallthrough
-        case .unlikePlaylist(let playlistID): return "users/\(SoundCloud.shared.user?.id ?? "")/playlist_likes/\(playlistID)"
+        case .unlikePlaylist(let playlistID): return "users/\(userID ?? "")/playlist_likes/\(playlistID)"
         case .repostPlaylist(let playlistID): fallthrough
         case .unrepostPlaylist(let playlistID): return "me/playlist_reposts/\(playlistID)"
         case .setPlaylistTracks(let id, _): return "playlists/\(id)"

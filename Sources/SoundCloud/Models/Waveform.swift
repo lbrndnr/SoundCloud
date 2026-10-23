@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Waveform: Encodable, Decodable {
+public struct Waveform: Encodable, Decodable, Sendable {
     
     public var width: Int {
         return samples.count

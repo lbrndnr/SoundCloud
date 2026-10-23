@@ -4,7 +4,7 @@
 
 import Foundation
 
-public struct Selection: Decodable, Identifiable, Hashable {
+public struct Selection: Decodable, Identifiable, Hashable, Sendable {
 
     public var id: String
     public var title: String

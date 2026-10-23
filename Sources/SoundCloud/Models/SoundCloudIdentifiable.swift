@@ -8,7 +8,7 @@
 
 import Foundation
 
-public protocol SoundCloudIdentifiable: Identifiable, Hashable {
+public protocol SoundCloudIdentifiable: Identifiable, Hashable, Sendable {
     
     var id: String { get }
     

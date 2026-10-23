@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Combine
 
 public struct NoNextPageError: Error { }
 
@@ -22,3 +21,5 @@ public struct Page<T: Decodable>: Decodable {
     }
     
 }
+
+extension Page: Sendable where T: Sendable {}
