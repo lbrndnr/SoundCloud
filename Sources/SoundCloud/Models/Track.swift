@@ -46,22 +46,35 @@ public struct Track: SoundCloudIdentifiable, Encodable, Decodable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        let rawID = try container.decode(Int.self, forKey: .id)
-        id = String(rawID)
+        // SoundCloud's API uses Int, Nuage encodes a String
+        if let rawID = try? container.decode(Int.self, forKey: .id) {
+            id = String(rawID)
+        }
+        else {
+            id = try container.decode(String.self, forKey: .id)
+        }
         title = try container.decode(String.self, forKey: .title)
         description = try container.decodeIfPresent(String.self, forKey: .description)
         artworkURL = try container.decodeIfPresent(URL.self, forKey: .artworkURL)
         waveformURL = try container.decode(URL.self, forKey: .waveformURL)
         permalinkURL = try container.decode(URL.self, forKey: .permalinkURL)
         
-        let media: [String: [[String: Any]]] = try container.decode([String: Any].self, forKey: .media) as! [String : [[String : Any]]]
-        let transcodings = media["transcodings"]!
-        if let file = audioFile(from: transcodings) {
-            streamURL = URL(string: file["url"] as! String)!
-            duration = Float(file["duration"]! as! Int)/1000
+        if container.contains(.media) {
+            // API format: the stream is one of the transcodings, durations are in milliseconds
+            let media = try container.decode([String: Any].self, forKey: .media)
+            let transcodings = media["transcodings"] as? [[String: Any]] ?? []
+            if let file = audioFile(from: transcodings) {
+                streamURL = (file["url"] as? String).flatMap(URL.init(string:))
+                duration = Float(file["duration"] as? Int ?? 0)/1000
+            }
+            else {
+                duration = 0
+            }
         }
         else {
-            duration = 0
+            // Format written by `encode(to:)`: the stream URL is stored directly, the duration is in seconds
+            streamURL = try container.decodeIfPresent(URL.self, forKey: .streamURL)
+            duration = try container.decode(Float.self, forKey: .duration)
         }
         playbackCount = try container.decodeIfPresent(Int.self, forKey: .playbackCount) ?? 0
         likeCount = try container.decodeIfPresent(Int.self, forKey: .likeCount) ?? 0
@@ -78,7 +91,7 @@ public struct Track: SoundCloudIdentifiable, Encodable, Decodable {
         try container.encodeIfPresent(description, forKey: .description)
         try container.encodeIfPresent(artworkURL, forKey: .artworkURL)
         try container.encode(waveformURL, forKey: .waveformURL)
-        try container.encode(streamURL, forKey: .streamURL)
+        try container.encodeIfPresent(streamURL, forKey: .streamURL)
         try container.encode(permalinkURL, forKey: .permalinkURL)
         try container.encode(duration, forKey: .duration)
         try container.encode(playbackCount, forKey: .playbackCount)
@@ -91,21 +104,21 @@ public struct Track: SoundCloudIdentifiable, Encodable, Decodable {
 }
 
 private func audioFile(from transcodings: [[String: Any]]) -> [String: Any]? {
-    func isFormatProgressive(from trasncoding: [String: Any]) -> Bool {
-        guard let formatProtocol = trasncoding["format"] as? [String: String] else { return false }
+    func isFormatProgressive(from transcoding: [String: Any]) -> Bool {
+        guard let format = transcoding["format"] as? [String: Any] else { return false }
         
-        return formatProtocol["protocol"] == "progressive"
+        return format["protocol"] as? String == "progressive"
     }
     
-    let hqFileProgressive = transcodings.filter { ($0["quality"] as! String) == "hq" && isFormatProgressive(from: $0) }
-        .first
-    let sqFileProgressive = transcodings.filter { ($0["quality"] as! String) == "sq" && isFormatProgressive(from: $0) }
-        .first
+    func quality(of transcoding: [String: Any]) -> String? {
+        return transcoding["quality"] as? String
+    }
+    
+    let hqFileProgressive = transcodings.first { quality(of: $0) == "hq" && isFormatProgressive(from: $0) }
+    let sqFileProgressive = transcodings.first { quality(of: $0) == "sq" && isFormatProgressive(from: $0) }
 
-    let hqFile = transcodings.filter { ($0["quality"] as! String) == "hq" }
-        .first
-    let sqFile = transcodings.filter { ($0["quality"] as! String) == "sq" }
-        .first
+    let hqFile = transcodings.first { quality(of: $0) == "hq" }
+    let sqFile = transcodings.first { quality(of: $0) == "sq" }
     
     return hqFileProgressive ?? sqFileProgressive ?? hqFile ?? sqFile
 }

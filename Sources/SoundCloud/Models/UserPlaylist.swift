@@ -38,6 +38,8 @@ public struct UserPlaylist: Playlist {
         case secretToken = "secret_token"
         case isAlbum = "is_album"
         case date = "created_at"
+        case kind
+        case trackIDs = "track_ids"
     }
     
     public init(from decoder: Decoder) throws {
@@ -64,11 +66,15 @@ public struct UserPlaylist: Playlist {
                 self.trackIDs = tracks.map { $0.id }
             }
             catch {
+                // Only some of the tracks are complete, the others merely contain their id
                 if let tracks = try container.decode([Any].self, forKey: .tracks) as? [[String : Any]] {
-                    let ids = tracks.map {"\(String(describing: $0["id"]!))" }
-                    self.trackIDs = ids
+                    self.trackIDs = tracks.compactMap { $0["id"].map { "\($0)" } }
                 }
             }
+        }
+        // Written by `encode(to:)`, takes precedence since `tracks` may only be a prefix
+        if let trackIDs = try? container.decodeIfPresent([String].self, forKey: .trackIDs) {
+            self.trackIDs = trackIDs
         }
         
         isAlbum = try container.decode(Bool.self, forKey: .isAlbum)
@@ -79,6 +85,7 @@ public struct UserPlaylist: Playlist {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
+        try container.encode("playlist", forKey: .kind)
         try container.encode(id, forKey: .id)
         try container.encode(title, forKey: .title)
         try container.encodeIfPresent(description, forKey: .description)
@@ -91,9 +98,8 @@ public struct UserPlaylist: Playlist {
         try container.encode(secretToken, forKey: .secretToken)
         try container.encode(date, forKey: .date)
         
-        if let tracks = tracks {
-            try container.encode(tracks, forKey: .tracks)
-        }
+        try container.encodeIfPresent(tracks, forKey: .tracks)
+        try container.encodeIfPresent(trackIDs, forKey: .trackIDs)
     }
     
     public func eraseToAnyPlaylist() -> AnyPlaylist {

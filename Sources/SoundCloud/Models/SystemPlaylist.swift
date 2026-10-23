@@ -36,6 +36,8 @@ public struct SystemPlaylist: Playlist {
         case tracks
         case user
         case madeForUser = "made_for"
+        case kind
+        case trackIDs = "track_ids"
     }
     
     public init(from decoder: Decoder) throws {
@@ -64,11 +66,15 @@ public struct SystemPlaylist: Playlist {
                 self.trackIDs = tracks.map { $0.id }
             }
             catch {
+                // Only some of the tracks are complete, the others merely contain their id
                 if let tracks = try container.decode([Any].self, forKey: .tracks) as? [[String : Any]] {
-                    let ids = tracks.map {"\(String(describing: $0["id"]!))" }
-                    self.trackIDs = ids
+                    self.trackIDs = tracks.compactMap { $0["id"].map { "\($0)" } }
                 }
             }
+        }
+        // Written by `encode(to:)`, takes precedence since `tracks` may only be a prefix
+        if let trackIDs = try? container.decodeIfPresent([String].self, forKey: .trackIDs) {
+            self.trackIDs = trackIDs
         }
         
         madeForUser = try container.decodeIfPresent(User.self, forKey: .madeForUser)
@@ -77,6 +83,7 @@ public struct SystemPlaylist: Playlist {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
+        try container.encode("system-playlist", forKey: .kind)
         try container.encode(id, forKey: .id)
         try container.encode(urn, forKey: .urn)
         try container.encode(title, forKey: .title)
@@ -88,9 +95,8 @@ public struct SystemPlaylist: Playlist {
         
         try container.encode(madeForUser, forKey: .madeForUser)
         
-        if let tracks = tracks {
-            try container.encode(tracks, forKey: .tracks)
-        }
+        try container.encodeIfPresent(tracks, forKey: .tracks)
+        try container.encodeIfPresent(trackIDs, forKey: .trackIDs)
     }
     
     public func eraseToAnyPlaylist() -> AnyPlaylist {
