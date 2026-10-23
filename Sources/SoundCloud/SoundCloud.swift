@@ -11,6 +11,12 @@ import Combine
 
 public struct AuthenticationError: Error {}
 
+public struct HTTPError: Error {
+    
+    public var statusCode: Int
+    
+}
+
 public class SoundCloud: ObservableObject {
     
     public static var shared = SoundCloud()
@@ -195,9 +201,17 @@ public class SoundCloud: ObservableObject {
     }
     
     public func perform<T>(_ request: APIRequest<T>) -> AnyPublisher<(), Error> {
+        if request.needsUserID && user == nil {
+            return Fail(error: NoUserError())
+                .eraseToAnyPublisher()
+        }
+        
         return URLSession.shared.dataTaskPublisher(for: authorized(request))
-            .map { _ in () }
-            .mapError { $0 as Error }
+            .tryMap { _, response in
+                if let response = response as? HTTPURLResponse, !(200..<300).contains(response.statusCode) {
+                    throw HTTPError(statusCode: response.statusCode)
+                }
+            }
             .eraseToAnyPublisher()
     }
     

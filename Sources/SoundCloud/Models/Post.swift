@@ -114,7 +114,6 @@ public struct Post: SoundCloudIdentifiable, Encodable, Decodable {
         try container.encode(id, forKey: .id)
         try container.encode(date, forKey: .date)
         try container.encode(caption, forKey: .caption)
-        try container.encode(caption, forKey: .caption)
         try container.encode(user, forKey: .user)
         
         switch kind {
