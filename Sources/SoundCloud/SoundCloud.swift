@@ -31,6 +31,9 @@ public final class SoundCloud {
     /// The logged in user. It's loaded whenever `accessToken` is set.
     public var user: User?
 
+    /// Stores the responses of requests performed with a `ResponseCache.policy` other than `.none`.
+    public var cache: ResponseCache?
+
     public var accessToken: String? {
         didSet {
             reloadUser()
@@ -63,23 +66,23 @@ public final class SoundCloud {
     // MARK: - Requests
 
     public func get<T: Decodable & Sendable>(_ request: APIRequest<T>) async throws -> T {
-        return try await Self.decoded(authorized(request))
+        return try await Self.decoded(authorized(request), cache: cache)
     }
 
     public func get<T: Decodable & Sendable>(_ request: APIRequest<Page<T>>, limit: Int? = 20) async throws -> Page<T> {
         let queryItems = limit.map { [URLQueryItem(name: "limit", value: String(min($0, 150)))] }
-        return try await Self.decoded(authorized(request, queryItems: queryItems ?? []))
+        return try await Self.decoded(authorized(request, queryItems: queryItems ?? []), cache: cache)
     }
 
     /// Loads pages until at least `count` elements are loaded or there are no more pages.
     /// The returned page contains all loaded elements and points to the page after the last loaded one.
     public func get<T: Decodable & Sendable>(_ request: APIRequest<Page<T>>, count: Int) async throws -> Page<T> {
         let queryItems = [URLQueryItem(name: "limit", value: "150")]
-        var page: Page<T> = try await Self.decoded(authorized(request, queryItems: queryItems))
+        var page: Page<T> = try await Self.decoded(authorized(request, queryItems: queryItems), cache: cache)
         var collection = page.collection
 
         while collection.count < count, let next = page.next {
-            page = try await Self.decoded(authorized(next, queryItems: queryItems))
+            page = try await Self.decoded(authorized(next, queryItems: queryItems), cache: cache)
             collection += page.collection
         }
 
@@ -90,11 +93,11 @@ public final class SoundCloud {
     /// Loads all pages and returns their elements.
     public func get<T: Decodable & Sendable>(all request: APIRequest<Page<T>>) async throws -> [T] {
         let queryItems = [URLQueryItem(name: "limit", value: "150")]
-        var page: Page<T> = try await Self.decoded(authorized(request, queryItems: queryItems))
+        var page: Page<T> = try await Self.decoded(authorized(request, queryItems: queryItems), cache: cache)
         var collection = page.collection
 
         while let next = page.next {
-            page = try await Self.decoded(authorized(next, queryItems: queryItems))
+            page = try await Self.decoded(authorized(next, queryItems: queryItems), cache: cache)
             collection += page.collection
         }
 
@@ -109,17 +112,17 @@ public final class SoundCloud {
 
     public func get<T: Decodable & Sendable>(next: URL, limit: Int = 20) async throws -> Page<T> {
         let queryItems = [URLQueryItem(name: "limit", value: String(min(limit, 150)))]
-        return try await Self.decoded(authorized(next, queryItems: queryItems))
+        return try await Self.decoded(authorized(next, queryItems: queryItems), cache: cache)
     }
 
     public func get<T: Decodable & Sendable>(_ request: ResourceRequest<T>) async throws -> T {
         let urlRequest = try request.needsAuthorization ? authorized(request.url) : URLRequest(url: request.url)
-        return try await Self.decoded(urlRequest, using: request)
+        return try await Self.decoded(urlRequest, using: request, cache: cache)
     }
 
     /// Performs a request whose response body isn't needed, e.g. liking a track.
     public func perform<T>(_ request: APIRequest<T>) async throws {
-        _ = try await Self.data(for: authorized(request))
+        _ = try await Self.data(for: authorized(request), cache: nil)
     }
 
     // MARK: - Authorization
@@ -164,13 +167,13 @@ public final class SoundCloud {
 
     // These are nonisolated, so that loading and decoding happens off the main actor.
 
-    nonisolated private static func decoded<T: Decodable & Sendable>(_ request: URLRequest) async throws -> T {
-        let data = try await data(for: request)
+    nonisolated private static func decoded<T: Decodable & Sendable>(_ request: URLRequest, cache: ResponseCache?) async throws -> T {
+        let data = try await data(for: request, cache: cache)
         return try makeDecoder().decode(T.self, from: data)
     }
 
-    nonisolated private static func decoded<T: Decodable & Sendable>(_ request: URLRequest, using resource: ResourceRequest<T>) async throws -> T {
-        let data = try await data(for: request)
+    nonisolated private static func decoded<T: Decodable & Sendable>(_ request: URLRequest, using resource: ResourceRequest<T>, cache: ResponseCache?) async throws -> T {
+        let data = try await data(for: request, cache: cache)
 
         if let resourceDecoder = resource.decoder {
             guard let payload = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [AnyHashable: Any] else {
@@ -182,13 +185,37 @@ public final class SoundCloud {
         return try makeDecoder().decode(T.self, from: data)
     }
 
-    nonisolated private static func data(for request: URLRequest) async throws -> Data {
+    /// Loads the response according to `ResponseCache.policy`.
+    nonisolated private static func data(for request: URLRequest, cache: ResponseCache?) async throws -> Data {
+        let policy = ResponseCache.policy
+        let key = policy == .none ? nil : cacheKey(for: request)
+
+        if policy == .cacheOnly {
+            guard let cache, let key, let data = await cache.data(forKey: key) else { throw CacheMissError() }
+            return data
+        }
+
         let (data, response) = try await URLSession.shared.data(for: request)
         if let response = response as? HTTPURLResponse, !(200..<300).contains(response.statusCode) {
             throw HTTPError(statusCode: response.statusCode)
         }
 
+        if policy == .reload, let cache, let key {
+            await cache.store(data, forKey: key)
+        }
+
         return data
+    }
+
+    /// The URL of a GET request without the access token, `nil` for other requests.
+    /// The cache is cleared when the user logs out, so the token doesn't need to be part of the key.
+    nonisolated private static func cacheKey(for request: URLRequest) -> String? {
+        guard (request.httpMethod ?? "GET") == "GET",
+              let url = request.url,
+              var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
+
+        components.queryItems = components.queryItems?.filter { $0.name != "oauth_token" }
+        return components.url?.absoluteString
     }
 
     nonisolated private static func makeDecoder() -> JSONDecoder {
